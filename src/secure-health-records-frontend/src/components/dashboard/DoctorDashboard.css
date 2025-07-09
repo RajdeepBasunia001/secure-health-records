@@ -1,0 +1,161 @@
+.doctor-dashboard-layout {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #f7f8fc;
+}
+
+.doctor-dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.2rem 2.5rem 1.2rem 2rem;
+  background: linear-gradient(90deg, #4b3ca7 80%, #6e5edb 100%);
+  color: #fff;
+  box-shadow: 0 4px 24px 0 rgba(75,60,167,0.13), 0 1.5px 0 #6e5edb;
+  position: relative;
+  z-index: 2;
+  animation: fadeInDown 0.7s cubic-bezier(0.4,0,0.2,1);
+}
+
+@keyframes fadeInDown {
+  from { opacity: 0; transform: translateY(-30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+}
+
+.dashboard-logo {
+  font-size: 2.2rem;
+  margin-right: 0.7rem;
+  filter: drop-shadow(0 2px 6px #6e5edb44);
+  transition: transform 0.2s;
+}
+.dashboard-logo:hover {
+  transform: scale(1.12) rotate(-8deg);
+}
+
+.dashboard-subtitle {
+  font-size: 1.1rem;
+  color: #e0e0f7;
+}
+
+.doctor-dashboard-body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  background: linear-gradient(120deg, #edeaff 60%, #f7f8fc 100%);
+  transition: background 0.4s;
+}
+
+.doctor-dashboard-sidebar {
+  width: 220px;
+  background: #edeaff;
+  padding: 2rem 0.5rem 2rem 1.2rem;
+  box-shadow: 2px 0 8px rgba(75,60,167,0.04);
+  transition: box-shadow 0.3s, background 0.3s;
+  z-index: 1;
+}
+
+.doctor-dashboard-sidebar nav ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.doctor-dashboard-sidebar li {
+  margin-bottom: 1.2rem;
+  position: relative;
+  transition: background 0.2s;
+}
+
+.doctor-dashboard-sidebar .sidebar-icon {
+  margin-right: 0.7rem;
+  font-size: 1.2rem;
+  vertical-align: middle;
+  transition: color 0.2s;
+}
+
+.doctor-dashboard-sidebar li.active a {
+  font-weight: bold;
+  color: #4b3ca7;
+  background: #fff;
+  border-radius: 0.5rem 0 0 0.5rem;
+  box-shadow: 0 2px 8px #4b3ca71a;
+}
+.doctor-dashboard-sidebar li.active::before {
+  content: '';
+  position: absolute;
+  left: -1.2rem;
+  top: 0.2rem;
+  height: 2.2rem;
+  width: 5px;
+  background: linear-gradient(180deg, #6e5edb 0%, #4b3ca7 100%);
+  border-radius: 4px;
+  box-shadow: 0 0 8px #6e5edb55;
+  animation: slideInBar 0.4s cubic-bezier(0.4,0,0.2,1);
+}
+@keyframes slideInBar {
+  from { height: 0; opacity: 0; }
+  to { height: 2.2rem; opacity: 1; }
+}
+
+.doctor-dashboard-sidebar a {
+  color: #3a3576;
+  text-decoration: none;
+  font-size: 1.08rem;
+  display: block;
+  padding: 0.7rem 1.1rem 0.7rem 0.7rem;
+  border-radius: 0.5rem;
+  transition: color 0.2s, background 0.2s, box-shadow 0.2s, transform 0.2s;
+}
+
+.doctor-dashboard-sidebar a:hover, .doctor-dashboard-sidebar a:focus {
+  color: #fff;
+  background: linear-gradient(90deg, #6e5edb 60%, #4b3ca7 100%);
+  box-shadow: 0 2px 12px #4b3ca71a;
+  transform: translateX(4px) scale(1.04);
+}
+
+.doctor-dashboard-content {
+  flex: 1;
+  padding: 2.5rem 2.5rem 2rem 2.5rem;
+  background: #fff;
+  border-radius: 0 0.7rem 0.7rem 0;
+  min-height: 600px;
+  box-shadow: 0 2px 8px rgba(75,60,167,0.04);
+  animation: fadeInContent 0.7s cubic-bezier(0.4,0,0.2,1);
+}
+@keyframes fadeInContent {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.logout-btn {
+  background: #fff;
+  color: #4b3ca7;
+  border: none;
+  border-radius: 5px;
+  padding: 0.5rem 1.1rem;
+  font-size: 1rem;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+  box-shadow: 0 1px 4px #4b3ca71a;
+}
+
+.logout-btn:hover, .logout-btn:focus {
+  background: #e0e0f7;
+  color: #2d246b;
+  box-shadow: 0 2px 8px #4b3ca71a;
+}
+
+.dashboard-user {
+  font-size: 1.05rem;
+  color: #e0e0f7;
+  text-shadow: 0 1px 2px #4b3ca755;
+} 

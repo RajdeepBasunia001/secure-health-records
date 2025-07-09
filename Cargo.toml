@@ -1,0 +1,5 @@
+[workspace]
+members = [
+    "src/secure-health-records-backend"
+]
+resolver = "2"

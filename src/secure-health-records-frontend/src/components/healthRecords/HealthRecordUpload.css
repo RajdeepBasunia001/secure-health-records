@@ -1,0 +1,177 @@
+.health-record-upload {
+  background: #f3f4f6;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(80, 80, 120, 0.06);
+  padding: 2rem 2.5rem;
+  max-width: 400px;
+  margin: 0 auto;
+}
+.health-record-upload.modern-upload-card {
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: 0 4px 24px rgba(80, 80, 120, 0.10);
+  padding: 2.5rem 2.5rem 2rem 2.5rem;
+  max-width: 440px;
+  margin: 0 auto;
+  margin-top: 2rem;
+  transition: box-shadow 0.2s;
+}
+.health-record-upload h3 {
+  text-align: center;
+  color: #7c3aed;
+  margin-bottom: 1.5rem;
+  font-size: 1.5rem;
+}
+.upload-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.3rem;
+}
+.upload-form input[type="file"] {
+  font-size: 1rem;
+}
+.drag-drop-area {
+  border: 2.5px dashed #c7d2fe;
+  border-radius: 14px;
+  background: #f8fafc;
+  padding: 2.2rem 1rem;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+  position: relative;
+}
+.drag-drop-area.drag-active {
+  border-color: #7c3aed;
+  background: #ede9fe;
+}
+.drag-drop-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+}
+.upload-icon {
+  font-size: 2.2rem;
+  margin-bottom: 0.2rem;
+}
+.drag-drop-text {
+  font-size: 1.08rem;
+  color: #5b21b6;
+}
+.browse-link {
+  color: #7c3aed;
+  text-decoration: underline;
+  cursor: pointer;
+}
+.drag-drop-subtext {
+  font-size: 0.95rem;
+  color: #a1a1aa;
+}
+.category-select {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  font-size: 1.05rem;
+}
+.category-select label {
+  color: #5b21b6;
+  font-weight: 500;
+}
+.category-select select {
+  padding: 0.4rem 1.1rem;
+  border-radius: 8px;
+  border: 1.5px solid #c7d2fe;
+  font-size: 1rem;
+  background: #f8fafc;
+  color: #312e81;
+}
+.upload-error {
+  color: #dc2626;
+  background: #fee2e2;
+  border-radius: 8px;
+  padding: 0.6rem 1.2rem;
+  font-size: 1rem;
+  text-align: center;
+}
+.upload-preview {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.7rem;
+  background: #ede9fe;
+  border-radius: 10px;
+  padding: 0.9rem 1.2rem;
+  animation: fadeIn 0.5s;
+}
+.animated-fade-in {
+  animation: fadeIn 0.5s;
+}
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.upload-img-preview {
+  max-width: 180px;
+  max-height: 120px;
+  border-radius: 8px;
+  box-shadow: 0 1px 4px rgba(80, 80, 120, 0.08);
+  transition: box-shadow 0.2s;
+}
+.pdf-preview {
+  font-size: 1.1rem;
+  color: #312e81;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.remove-btn {
+  background: #fff;
+  color: #7c3aed;
+  border: 1.5px solid #c084fc;
+  border-radius: 999px;
+  padding: 0.4rem 1.2rem;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+.remove-btn:hover {
+  background: #f3e8ff;
+}
+.upload-btn {
+  background: linear-gradient(90deg, #7c3aed 60%, #a78bfa 100%);
+  color: #fff;
+  border: none;
+  border-radius: 999px;
+  padding: 0.8rem 1.7rem;
+  font-size: 1.15rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(124, 58, 237, 0.08);
+  transition: background 0.2s;
+}
+.upload-btn:hover {
+  background: linear-gradient(90deg, #5b21b6 60%, #a78bfa 100%);
+}
+.upload-success {
+  color: #16a34a;
+  background: #dcfce7;
+  border-radius: 8px;
+  padding: 0.7rem 1.2rem;
+  font-size: 1.08rem;
+  text-align: center;
+  margin-top: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  justify-content: center;
+}
+.success-icon {
+  font-size: 1.3rem;
+}
+@media (max-width: 600px) {
+  .health-record-upload.modern-upload-card {
+    padding: 1.2rem 0.5rem 1rem 0.5rem;
+    max-width: 98vw;
+  }
+} 

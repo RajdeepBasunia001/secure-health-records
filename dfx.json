@@ -1,0 +1,41 @@
+{
+  "canisters": {
+    "internet_identity": {
+      "candid": "https://github.com/dfinity/internet-identity/releases/latest/download/internet_identity.did",
+      "frontend": {},
+      "remote": {
+        "id": {
+          "ic": "rdmx6-jaaaa-aaaaa-aaadq-cai"
+        }
+      },
+      "type": "custom",
+      "wasm": "https://github.com/dfinity/internet-identity/releases/latest/download/internet_identity_dev.wasm.gz"
+    },
+    "secure-health-records-backend": {
+      "candid": "src/secure-health-records-backend/secure-health-records-backend.did",
+      "package": "secure-health-records-backend",
+      "type": "rust"
+    },
+    "secure-health-records-frontend": {
+      "dependencies": [
+        "secure-health-records-backend"
+      ],
+      "source": [
+        "src/secure-health-records-frontend/dist"
+      ],
+      "type": "assets",
+      "workspace": "secure-health-records-frontend",
+      "headers": {
+        "Content-Security-Policy": "default-src 'self'; img-src 'self' data: blob:; connect-src 'self' http://localhost:4943; script-src 'self'; style-src 'self' 'unsafe-inline';"
+      }
+    }
+  },
+  "defaults": {
+    "build": {
+      "args": "",
+      "packtool": ""
+    }
+  },
+  "output_env_file": ".env",
+  "version": 1
+}

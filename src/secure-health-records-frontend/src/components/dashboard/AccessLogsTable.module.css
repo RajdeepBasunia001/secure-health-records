@@ -1,0 +1,82 @@
+.access-logs-section {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2.5rem 1.5rem 3rem 1.5rem;
+  background: #f5faff;
+  border-radius: 18px;
+  box-shadow: 0 4px 32px 0 rgba(37, 99, 235, 0.08);
+}
+
+.access-logs-card {
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 2px 12px 0 rgba(37, 99, 235, 0.10);
+  padding: 1.2rem 1rem 1rem 1rem;
+  margin-bottom: 1.2rem;
+  max-width: 1200px;
+  min-width: 400px;
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.access-logs-header {
+  color: #2563eb;
+  margin-bottom: 1.2rem;
+  text-align: center;
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+.access-logs-input {
+  padding: 0.4rem 0.7rem;
+  border: 1.5px solid #d1d5db;
+  border-radius: 7px;
+  font-size: 0.93rem;
+  outline: none;
+  transition: border 0.2s, box-shadow 0.2s;
+  background: #f3f4f6;
+  margin-bottom: 1em;
+  width: 100%;
+}
+.access-logs-input:focus {
+  border: 1.5px solid #2563eb;
+  box-shadow: 0 0 0 2px #dbeafe;
+}
+
+.access-logs-table-wrapper {
+  overflow-x: auto;
+  max-height: 320px;
+  min-height: 120px;
+}
+
+.access-logs-table {
+  width: 100%;
+  min-width: 650px;
+  border-collapse: separate;
+  border-spacing: 0;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 1px 6px 0 rgba(37, 99, 235, 0.06);
+  font-size: 0.93rem;
+  overflow: hidden;
+}
+.access-logs-table th, .access-logs-table td {
+  padding: 0.38rem 0.5rem;
+  text-align: left;
+  vertical-align: middle;
+}
+.access-logs-table th {
+  background: #dbeafe;
+  color: #2563eb;
+  font-weight: 700;
+  font-size: 0.99rem;
+  border-bottom: 1.5px solid #bfdbfe;
+}
+.access-logs-table tbody tr {
+  transition: background 0.18s;
+  height: 1.5rem;
+}
+.access-logs-table tbody tr:hover {
+  background: #f3f4f6;
+} 

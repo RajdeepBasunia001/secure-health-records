@@ -1,0 +1,121 @@
+type Category = variant { General; Surgery; Immunization; Allergies };
+type HealthRecord = record {
+  id: nat64;
+  owner: principal;
+  name: text;
+  file_type: text;
+  category: Category;
+  data: vec nat8;
+  uploaded_at: nat64;
+};
+type HealthRecordMetadata = record {
+  id: nat64;
+  owner: principal;
+  name: text;
+  file_type: text;
+  category: Category;
+  uploaded_at: nat64;
+};
+type ConsentStatus = variant { Pending; Approved; Denied };
+type ConsentRequest = record {
+  id: nat64;
+  patient: principal;
+  requester: principal;
+  requested_at: nat64;
+  status: ConsentStatus;
+};
+type NotificationType = variant { ConsentRequested; ConsentResponded };
+type Notification = record {
+  id: nat64;
+  recipient: principal;
+  sender: principal;
+  notif_type: NotificationType;
+  message: text;
+  created_at: nat64;
+  read: bool;
+};
+type AppointmentRequest = record {
+  id: nat64;
+  patient: principal;
+  provider_health_id: text;
+  request_type: text;
+  details: text;
+  status: text;
+  created_at: nat64;
+  consent_token: opt text;
+  shared_files: opt vec SharedFilePermission;
+};
+type SharedFilePermission = record {
+  file_id: nat64;
+  permission: text;
+  duration: nat64;
+};
+
+type AccessLogEntry = record {
+  id: nat64;
+  record_id: nat64;
+  accessed_by: principal;
+  accessed_at: nat64;
+  access_type: text;
+  purpose: opt text;
+};
+
+type ConsentHistoryEntry = record {
+  id: nat64;
+  consent_id: nat64;
+  patient: principal;
+  grantee: principal;
+  granted_at: nat64;
+  revoked_at: opt nat64;
+  expires_at: opt nat64;
+  permissions: text;
+  status: text;
+};
+
+type DoctorProfile = record {
+  user_principal: principal;
+  health_id: text;
+  name: text;
+  registered_at: nat64;
+};
+
+type PatientProfile = record {
+  user_principal: principal;
+  health_id: text;
+  name: text;
+  age: nat8;
+  gender: text;
+  registered_at: nat64;
+};
+
+service : {
+  upload_record: (name: text, file_type: text, category: Category, data: vec nat8) -> ();
+  get_records: (owner: principal) -> (vec HealthRecordMetadata);
+  get_record_data: (record_id: nat64) -> (opt vec nat8);
+  request_consent: (patient: principal) -> ();
+  get_consent_requests: () -> (vec ConsentRequest);
+  respond_consent_request: (request_id: nat64, approve: bool) -> ();
+  get_notifications: () -> (vec Notification);
+  mark_notification_read: (notification_id: nat64) -> ();
+  delete_record: (record_id: nat64) -> (variant { ok: null; err: text });
+  rename_record: (record_id: nat64, new_name: text) -> (variant { ok: null; err: text });
+  create_appointment_request: (
+    provider_health_id: text,
+    request_type: text,
+    details: text,
+    consent_token: opt text,
+    shared_files: opt vec SharedFilePermission
+  ) -> (variant { ok: nat64; err: text });
+  get_appointment_requests_for_provider: (provider_health_id: text) -> (vec AppointmentRequest);
+  log_access_event: (record_id: nat64, accessed_by: principal, access_type: text, purpose: opt text) -> ();
+  get_access_logs_for_record: (record_id: nat64) -> (vec AccessLogEntry);
+  log_consent_history: (consent_id: nat64, patient: principal, grantee: principal, granted_at: nat64, revoked_at: opt nat64, expires_at: opt nat64, permissions: text, status: text) -> ();
+  get_consent_history_for_patient: (patient: principal) -> (vec ConsentHistoryEntry);
+  revoke_consent: (consent_id: nat64) -> (variant { ok: null; err: text });
+  extend_consent: (consent_id: nat64, new_expires_at: nat64) -> (variant { ok: null; err: text });
+  register_doctor: (name: text) -> (variant { ok: DoctorProfile; err: text });
+  get_doctor_profile: (user_principal: principal) -> (opt DoctorProfile);
+  register_patient: (name: text, age: nat8, gender: text) -> (variant { ok: PatientProfile; err: text });
+  get_patient_profile: (user_principal: principal) -> (opt PatientProfile);
+  get_patient_by_health_id: (health_id: text) -> (opt PatientProfile);
+}

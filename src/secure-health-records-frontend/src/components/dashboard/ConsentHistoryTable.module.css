@@ -1,0 +1,82 @@
+.consent-history-section {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2.5rem 1.5rem 3rem 1.5rem;
+  background: #f6f7fb;
+  border-radius: 18px;
+  box-shadow: 0 4px 32px 0 rgba(124, 58, 237, 0.08);
+}
+
+.consent-history-card {
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 2px 12px 0 rgba(91, 33, 182, 0.10);
+  padding: 1.2rem 1rem 1rem 1rem;
+  margin-bottom: 1.2rem;
+  max-width: 1200px;
+  min-width: 400px;
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.consent-history-header {
+  color: #6d28d9;
+  margin-bottom: 1.2rem;
+  text-align: center;
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+.consent-history-input {
+  padding: 0.4rem 0.7rem;
+  border: 1.5px solid #d1d5db;
+  border-radius: 7px;
+  font-size: 0.93rem;
+  outline: none;
+  transition: border 0.2s, box-shadow 0.2s;
+  background: #f3f4f6;
+  margin-bottom: 1em;
+  width: 100%;
+}
+.consent-history-input:focus {
+  border: 1.5px solid #6d28d9;
+  box-shadow: 0 0 0 2px #ede9fe;
+}
+
+.consent-history-table-wrapper {
+  overflow-x: auto;
+  max-height: 320px;
+  min-height: 120px;
+}
+
+.consent-history-table {
+  width: 100%;
+  min-width: 650px;
+  border-collapse: separate;
+  border-spacing: 0;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 1px 6px 0 rgba(124, 58, 237, 0.06);
+  font-size: 0.93rem;
+  overflow: hidden;
+}
+.consent-history-table th, .consent-history-table td {
+  padding: 0.38rem 0.5rem;
+  text-align: left;
+  vertical-align: middle;
+}
+.consent-history-table th {
+  background: #ede9fe;
+  color: #6d28d9;
+  font-weight: 700;
+  font-size: 0.99rem;
+  border-bottom: 1.5px solid #e0e7ff;
+}
+.consent-history-table tbody tr {
+  transition: background 0.18s;
+  height: 1.5rem;
+}
+.consent-history-table tbody tr:hover {
+  background: #f3f4f6;
+} 
