@@ -15,8 +15,8 @@ const roleLabels = {
 };
 
 // Set your local Internet Identity canister ID here:
-const LOCAL_II_CANISTER_ID = "ulvla-h7777-77774-qaacq-cai"; // <-- Replace with your actual local II canister ID if different
-const identityProvider = `http://uxrrr-q7777-77774-qaaaq-cai.localhost:4943/`;
+const LOCAL_II_CANISTER_ID = process.env.CANISTER_ID_INTERNET_IDENTITY; // <-- Replace with your actual local II canister ID if different
+const identityProvider = `http://${LOCAL_II_CANISTER_ID}.localhost:4943/`;
 
 const Login = () => {
   const [loading, setLoading] = useState(false);

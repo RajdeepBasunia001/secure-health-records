@@ -8,6 +8,10 @@ pub enum Category {
     Surgery,
     Immunization,
     Allergies,
+    Prescription,
+    ConsultationNote,
+    LabReport,
+    Other,
 }
 
 #[derive(CandidType, Deserialize, Serialize, Clone)]
@@ -18,6 +22,7 @@ pub struct HealthRecord {
     file_type: String,
     category: Category,
     data: Vec<u8>,
+    digital_signature: String, // NEW
     uploaded_at: u64,
 }
 
@@ -62,6 +67,7 @@ pub struct HealthRecordMetadata {
     file_type: String,
     category: Category,
     uploaded_at: u64,
+    digital_signature: String, // Added field
 }
 
 #[derive(CandidType, Deserialize, Serialize, Clone, Debug)]
@@ -139,7 +145,7 @@ thread_local! {
 // --- Health Record Methods ---
 
 #[ic_cdk::update]
-fn upload_record(name: String, file_type: String, category: Category, data: Vec<u8>) {
+fn upload_record(name: String, file_type: String, category: Category, data: Vec<u8>, digital_signature: String) {
     let caller = ic_cdk::caller();
     let now = time();
     let id = NEXT_RECORD_ID.with(|n| {
@@ -155,6 +161,7 @@ fn upload_record(name: String, file_type: String, category: Category, data: Vec<
         file_type,
         category,
         data,
+        digital_signature,
         uploaded_at: now,
     };
     RECORDS.with(|r| r.borrow_mut().push(record));
@@ -184,6 +191,7 @@ fn get_records(owner: Principal) -> Vec<HealthRecordMetadata> {
                 file_type: rec.file_type.clone(),
                 category: rec.category.clone(),
                 uploaded_at: rec.uploaded_at,
+                digital_signature: rec.digital_signature.clone(), // Added mapping
             }).collect()
         })
     } else {

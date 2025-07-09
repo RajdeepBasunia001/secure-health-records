@@ -16,6 +16,7 @@ import AccessLogsRoute from './components/dashboard/AccessLogsRoute';
 import ConsentHistoryTable from './components/dashboard/ConsentHistoryTable';
 import ConsentRequests from './components/dashboard/ConsentRequests';
 import PatientLookup from './components/dashboard/PatientLookup';
+import UploadNotes from './components/dashboard/UploadNotes';
 
 const Placeholder = ({ title }) => (
   <section className="py-24 bg-gray-50 text-center">
@@ -98,7 +99,7 @@ function App() {
         <Route path="/dashboard/doctor/*" element={<DoctorDashboard />}>
           <Route path="requests" element={<ConsentRequests />} />
           <Route path="lookup" element={<PatientLookup />} />
-          <Route path="upload-notes" element={<DoctorUploadNotes />} />
+          <Route path="upload-notes" element={<UploadNotes />} />
         </Route>
         <Route path="/dashboard/admin" element={<AdminDashboard />} />
       </Routes>

@@ -1,4 +1,4 @@
-type Category = variant { General; Surgery; Immunization; Allergies };
+type Category = variant { General; Surgery; Immunization; Allergies; Prescription; ConsultationNote; LabReport; Other };
 type HealthRecord = record {
   id: nat64;
   owner: principal;
@@ -6,6 +6,7 @@ type HealthRecord = record {
   file_type: text;
   category: Category;
   data: vec nat8;
+  digital_signature: text;
   uploaded_at: nat64;
 };
 type HealthRecordMetadata = record {
@@ -89,7 +90,7 @@ type PatientProfile = record {
 };
 
 service : {
-  upload_record: (name: text, file_type: text, category: Category, data: vec nat8) -> ();
+  upload_record: (name: text, file_type: text, category: Category, data: vec nat8, digital_signature: text) -> ();
   get_records: (owner: principal) -> (vec HealthRecordMetadata);
   get_record_data: (record_id: nat64) -> (opt vec nat8);
   request_consent: (patient: principal) -> ();

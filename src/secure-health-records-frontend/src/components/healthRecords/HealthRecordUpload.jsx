@@ -72,7 +72,8 @@ const HealthRecordUpload = () => {
         file.name,
         file.type,
         { [category]: null },
-        uint8Array
+        uint8Array,
+        "" // digital_signature: empty string for patient uploads
       );
       if (result && result.err) {
         setError('Upload failed: ' + result.err);
