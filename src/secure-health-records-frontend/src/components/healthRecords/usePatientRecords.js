@@ -12,7 +12,9 @@ export function usePatientRecords() {
   const getCurrentPrincipal = async () => {
     const authClient = await AuthClient.create();
     const identity = authClient.getIdentity();
-    return identity.getPrincipal().toText();
+    const principal = identity.getPrincipal().toText();
+    console.log('usePatientRecords principal:', principal);
+    return principal;
   };
 
   const fetchRecords = useCallback(async () => {

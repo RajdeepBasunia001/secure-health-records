@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { getBackendActor } from '../../dfinity';
+import { AuthClient } from '@dfinity/auth-client';
 
 const ConsentRequests = () => {
   const [requests, setRequests] = useState([]);

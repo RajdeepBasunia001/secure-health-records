@@ -4,11 +4,12 @@ import './PatientDashboard.css';
 import Notifications from '../dashboard/Notifications';
 import Footer from '../common/Footer';
 import { getPatientProfile, registerPatient } from '../../canisterApi';
+import { AuthClient } from '@dfinity/auth-client';
 
 const PatientDashboard = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const user = localStorage.getItem('principal');
+  const [principal, setPrincipal] = useState(null);
 
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -20,16 +21,24 @@ const PatientDashboard = () => {
   const [regLoading, setRegLoading] = useState(false);
 
   useEffect(() => {
+    AuthClient.create().then(authClient => {
+      const p = authClient.getIdentity().getPrincipal().toText();
+      setPrincipal(p);
+      console.log('PatientDashboard principal:', p);
+    });
+  }, []);
+
+  useEffect(() => {
     async function fetchProfile() {
       setLoading(true);
       setRegError('');
-      if (!user) {
+      if (!principal) {
         setProfile(null);
         setLoading(false);
         return;
       }
       try {
-        const result = await getPatientProfile(user);
+        const result = await getPatientProfile(principal);
         if (result && result[0]) {
           setProfile(result[0]);
           setShowRegistration(false);
@@ -42,7 +51,7 @@ const PatientDashboard = () => {
       setLoading(false);
     }
     fetchProfile();
-  }, [user]);
+  }, [principal]);
 
   const handleLogout = () => {
     if (window.confirm('Are you sure you want to logout?')) {
@@ -57,12 +66,13 @@ const PatientDashboard = () => {
     setRegError('');
     try {
       const result = await registerPatient(regName, Number(regAge), regGender);
+      console.log('Registration result:', result); // Debug log
       if (result && result.ok) {
-        setProfile(result.ok);
+        setProfile(result.ok); // Use the returned profile directly
         setShowRegistration(false);
       } else if (result && result.err) {
         setRegError(result.err);
-        console.error('Registration error:', result.err); // Log backend error
+        console.error('Registration error:', result.err);
       } else {
         setRegError('Registration failed.');
         console.error('Registration failed:', result);

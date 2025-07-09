@@ -40,11 +40,7 @@ export async function createBackendActor(identity) {
 
 // Always returns a Promise that resolves to a ready backendActor
 export async function getBackendActor() {
-  if (backendActor) return backendActor;
-  if (!initializing) {
-    initializing = createBackendActor();
-  }
-  await initializing;
-  initializing = null;
-  return backendActor;
+  const authClient = await AuthClient.create();
+  const identity = authClient.getIdentity();
+  return createBackendActor(identity);
 }

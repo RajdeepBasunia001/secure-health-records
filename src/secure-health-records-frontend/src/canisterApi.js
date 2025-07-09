@@ -28,6 +28,7 @@ export async function extendConsent(consentId, newExpiresAt) {
 
 // Fetch doctor profile by principal string
 export async function getDoctorProfile(principalString) {
+  console.log('getDoctorProfile called with principal:', principalString);
   const actor = await getBackendActor();
   const principal = Principal.fromText(principalString);
   return actor.get_doctor_profile(principal);
@@ -36,11 +37,13 @@ export async function getDoctorProfile(principalString) {
 // Register a new doctor
 export async function registerDoctor(name) {
   const actor = await getBackendActor();
+  console.log('registerDoctor called');
   return actor.register_doctor(name);
 }
 
 // Fetch patient profile by principal string
 export async function getPatientProfile(principalString) {
+  console.log('getPatientProfile called with principal:', principalString);
   const actor = await getBackendActor();
   const principal = Principal.fromText(principalString);
   return actor.get_patient_profile(principal);
@@ -49,6 +52,7 @@ export async function getPatientProfile(principalString) {
 // Register a new patient
 export async function registerPatient(name, age, gender) {
   const actor = await getBackendActor();
+  console.log('registerPatient called');
   return actor.register_patient(name, age, gender);
 }
 

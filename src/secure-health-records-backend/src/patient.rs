@@ -18,6 +18,7 @@ thread_local! {
 }
 
 pub fn register_patient(name: String, age: u8, gender: String) -> Result<PatientProfile, String> {
+    ic_cdk::println!("[DEBUG] register_patient called: name={}, age={}, gender={}", name, age, gender);
     let principal = ic_cdk::caller();
     // Check if already registered
     let already = PATIENTS.with(|pats| pats.borrow().iter().any(|p| p.user_principal == principal));

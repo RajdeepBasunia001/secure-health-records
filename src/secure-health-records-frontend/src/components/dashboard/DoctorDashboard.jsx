@@ -3,11 +3,12 @@ import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import './DoctorDashboard.css';
 import Footer from '../common/Footer';
 import { getDoctorProfile, registerDoctor } from '../../canisterApi';
+import { AuthClient } from '@dfinity/auth-client';
 
 const DoctorDashboard = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const user = localStorage.getItem('principal');
+  const [principal, setPrincipal] = useState(null);
 
   // Doctor profile state
   const [profile, setProfile] = useState(null);
@@ -17,12 +18,20 @@ const DoctorDashboard = () => {
   const [regLoading, setRegLoading] = useState(false);
 
   useEffect(() => {
+    AuthClient.create().then(authClient => {
+      const p = authClient.getIdentity().getPrincipal().toText();
+      setPrincipal(p);
+      console.log('DoctorDashboard principal:', p);
+    });
+  }, []);
+
+  useEffect(() => {
     async function fetchProfile() {
       setLoading(true);
       setRegError('');
       try {
-        if (!user) return setProfile(null);
-        const prof = await getDoctorProfile(user);
+        if (!principal) return setProfile(null);
+        const prof = await getDoctorProfile(principal);
         // Handle possible wrapping and field name differences
         let profileObj = prof;
         if (prof && prof.ok) profileObj = prof.ok;
@@ -38,7 +47,7 @@ const DoctorDashboard = () => {
       }
     }
     fetchProfile();
-  }, [user]);
+  }, [principal]);
 
   const handleRegister = async (e) => {
     e.preventDefault();
