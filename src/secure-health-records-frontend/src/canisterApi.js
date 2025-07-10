@@ -60,4 +60,10 @@ export async function registerPatient(name, age, gender) {
 export async function getPatientByHealthId(healthId) {
   const actor = await getBackendActor();
   return actor.get_patient_by_health_id(healthId);
+}
+
+// Fetch all registered doctors
+export async function fetchAllDoctors() {
+  const actor = await getBackendActor();
+  return actor.debug_list_doctors();
 } 

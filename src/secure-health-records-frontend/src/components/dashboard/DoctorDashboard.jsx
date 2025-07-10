@@ -8,6 +8,15 @@ import { AuthClient } from '@dfinity/auth-client';
 const DoctorDashboard = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  // --- AUTH GUARD START ---
+  useEffect(() => {
+    const principal = localStorage.getItem('principal');
+    const role = localStorage.getItem('role');
+    if (!principal || role !== 'doctor') {
+      navigate('/login?role=doctor', { replace: true });
+    }
+  }, [navigate]);
+  // --- AUTH GUARD END ---
   const [principal, setPrincipal] = useState(null);
 
   // Doctor profile state
@@ -21,7 +30,6 @@ const DoctorDashboard = () => {
     AuthClient.create().then(authClient => {
       const p = authClient.getIdentity().getPrincipal().toText();
       setPrincipal(p);
-      console.log('DoctorDashboard principal:', p);
     });
   }, []);
 
@@ -38,7 +46,6 @@ const DoctorDashboard = () => {
         if (profileObj && profileObj.healthId && !profileObj.health_id) {
           profileObj.health_id = profileObj.healthId;
         }
-        console.log('Doctor profile:', profileObj);
         setProfile(profileObj);
       } catch (e) {
         setProfile(null);
@@ -54,13 +61,18 @@ const DoctorDashboard = () => {
     setRegLoading(true);
     setRegError('');
     try {
-      const result = await registerDoctor(regName);
-      if (result.err) setRegError(result.err);
-      else setProfile(result.ok);
+      await registerDoctor(regName);
+      window.location.reload();
     } catch (e) {
-      setRegError('Registration failed.');
+      let errorMsg = 'Registration failed.';
+      if (e && e.message) {
+        errorMsg = e.message;
+      } else if (typeof e === 'string') {
+        errorMsg = e;
+      }
+      setRegError(errorMsg);
+      setRegLoading(false);
     }
-    setRegLoading(false);
   };
 
   const handleLogout = () => {
@@ -71,7 +83,7 @@ const DoctorDashboard = () => {
   };
 
   // Registration UI
-  if (!loading && !profile) {
+  if (!loading && (!profile || (Array.isArray(profile) && profile.length === 0))) {
     return (
       <div className="doctor-dashboard-layout">
         <header className="doctor-dashboard-header enhanced-header">
@@ -108,9 +120,15 @@ const DoctorDashboard = () => {
           </div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1.2rem' }}>
-          {profile && (
+          {profile && ((Array.isArray(profile) ? profile[0] : profile)) && (
             <div className="dashboard-user">
-              <span style={{ fontWeight: 500 }}>Dr. {profile.name}</span> &nbsp;|&nbsp; <span style={{ color: '#fff', background: '#6e5edb', borderRadius: 6, padding: '0.2rem 0.7rem', fontSize: '0.98rem', marginLeft: 4 }}>ID: {profile.health_id}</span>
+              <span style={{ fontWeight: 500 }}>
+                Dr. {(Array.isArray(profile) ? profile[0]?.name : profile.name)}
+              </span>
+              &nbsp;|&nbsp;
+              <span style={{ color: '#fff', background: '#6e5edb', borderRadius: 6, padding: '0.2rem 0.7rem', fontSize: '0.98rem', marginLeft: 4 }}>
+                ID: {(Array.isArray(profile) ? profile[0]?.health_id : profile.health_id)}
+              </span>
             </div>
           )}
           <button className="logout-btn" onClick={handleLogout}>Logout</button>

@@ -1,12 +1,11 @@
 import React, { useEffect } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import NavigationBar from './components/layout/NavigationBar';
-import HeroSection from './components/layout/HeroSection';
+import LandingPage from './components/layout/LandingPage';
 import RoleSelection from './components/auth/RoleSelection';
 import Login from './components/auth/Login';
 import PatientDashboard from './components/dashboard/PatientDashboard';
 import DoctorDashboard from './components/dashboard/DoctorDashboard';
-import AdminDashboard from './components/dashboard/AdminDashboard';
 import HealthRecordList from './components/healthRecords/HealthRecordList';
 import HealthRecordUpload from './components/healthRecords/HealthRecordUpload';
 import Notifications from './components/dashboard/Notifications';
@@ -24,14 +23,6 @@ const Placeholder = ({ title }) => (
     <p className="text-lg text-gray-600">(Content coming soon)</p>
   </section>
 );
-
-function LandingPage() {
-  return (
-    <>
-      <HeroSection />
-    </>
-  );
-}
 
 const PatientRecords = () => (
   <HealthRecordList />
@@ -101,7 +92,6 @@ function App() {
           <Route path="lookup" element={<PatientLookup />} />
           <Route path="upload-notes" element={<UploadNotes />} />
         </Route>
-        <Route path="/dashboard/admin" element={<AdminDashboard />} />
       </Routes>
     </>
   );

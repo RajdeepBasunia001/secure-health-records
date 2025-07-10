@@ -1,0 +1,115 @@
+.modern-notifications {
+  background: #f8fafd;
+  border-radius: 16px;
+  padding: 2rem 2.5rem;
+  box-shadow: 0 2px 16px #4b3ca71a;
+  max-width: 600px;
+  margin: 2rem auto;
+}
+
+.notification-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.notification-item.modern-card {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 1px 8px #b3b3b31a;
+  margin-bottom: 1.2rem;
+  padding: 1.2rem 1.5rem 1rem 1.2rem;
+  display: flex;
+  flex-direction: column;
+  border-left: 4px solid #6e5edb;
+  opacity: 1;
+  transform: translateY(0);
+  transition: box-shadow 0.2s, opacity 0.3s, transform 0.3s;
+}
+
+.notification-item.modern-card:hover {
+  box-shadow: 0 4px 24px #6e5edb22;
+}
+
+.notification-content {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.notification-icon {
+  font-size: 1.6rem;
+  color: #6e5edb;
+  margin-top: 0.1rem;
+}
+
+.notification-message {
+  font-size: 1.08rem;
+  color: #2d2d2d;
+  font-weight: 500;
+}
+
+.notification-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 0.7rem;
+  font-size: 0.98rem;
+  color: #7a7a7a;
+}
+
+.notification-date {
+  font-size: 0.97rem;
+  color: #a0a0a0;
+}
+
+.modern-btn {
+  background: linear-gradient(90deg, #6e5edb 60%, #a18aff 100%);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 0.4rem 1.1rem;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  box-shadow: 0 1px 4px #6e5edb22;
+  transition: background 0.2s, box-shadow 0.2s;
+}
+
+.modern-btn:hover {
+  background: linear-gradient(90deg, #a18aff 0%, #6e5edb 100%);
+  box-shadow: 0 2px 12px #6e5edb33;
+}
+
+.no-notifications {
+  color: #b0b0b0;
+  font-size: 1.1rem;
+  text-align: center;
+  margin: 2rem 0 1rem 0;
+}
+
+/* Fade/slide-in animation */
+.animate-in {
+  animation: fadeSlideIn 0.5s cubic-bezier(.4,1.4,.6,1) both;
+}
+
+@keyframes fadeSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 700px) {
+  .modern-notifications {
+    padding: 1.2rem 0.5rem;
+    max-width: 98vw;
+  }
+  .notification-item.modern-card {
+    padding: 1rem 0.7rem 0.8rem 0.7rem;
+  }
+} 

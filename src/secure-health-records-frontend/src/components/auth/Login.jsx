@@ -11,7 +11,6 @@ function useQuery() {
 const roleLabels = {
   patient: 'Patient',
   doctor: 'Doctor',
-  admin: 'Admin',
 };
 
 // Set your local Internet Identity canister ID here:
@@ -47,11 +46,9 @@ const Login = () => {
           setLoading(false);
           // Redirect to the appropriate dashboard
           if (role === 'patient') {
-            navigate('/dashboard/patient/records');
+            navigate('/dashboard/patient');
           } else if (role === 'doctor') {
             navigate('/dashboard/doctor');
-          } else if (role === 'admin') {
-            navigate('/dashboard/admin');
           }
         },
         onError: (err) => {

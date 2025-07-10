@@ -119,4 +119,5 @@ service : {
   register_patient: (name: text, age: nat8, gender: text) -> (variant { ok: PatientProfile; err: text });
   get_patient_profile: (user_principal: principal) -> (opt PatientProfile);
   get_patient_by_health_id: (health_id: text) -> (opt PatientProfile);
+  debug_list_doctors: () -> (vec DoctorProfile) query;
 }

@@ -19,14 +19,6 @@ const roles = [
       <svg width="48" height="48" fill="none" viewBox="0 0 48 48"><rect x="14" y="8" width="20" height="32" rx="6" fill="#2563eb"/><rect x="20" y="20" width="8" height="16" rx="4" fill="#fff"/></svg>
     ),
     description: 'View and update patient records with consent.'
-  },
-  {
-    key: 'admin',
-    title: 'Admin',
-    icon: (
-      <svg width="48" height="48" fill="none" viewBox="0 0 48 48"><rect x="10" y="10" width="28" height="28" rx="6" fill="#2563eb"/><path d="M24 18v12M18 24h12" stroke="#fff" strokeWidth="3" strokeLinecap="round"/></svg>
-    ),
-    description: 'Manage platform users and oversee system security.'
   }
 ];
 

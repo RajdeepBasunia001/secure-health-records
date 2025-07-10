@@ -514,6 +514,11 @@ fn get_doctor_profile(principal: Principal) -> Option<DoctorProfile> {
     DOCTORS.with(|docs| docs.borrow().iter().find(|d| d.user_principal == principal).cloned())
 }
 
+#[ic_cdk::query]
+fn debug_list_doctors() -> Vec<DoctorProfile> {
+    DOCTORS.with(|docs| docs.borrow().clone())
+}
+
 #[ic_cdk::update]
 pub fn register_patient(name: String, age: u8, gender: String) -> Result<PatientProfile, String> {
     patient::register_patient(name, age, gender)

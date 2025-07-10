@@ -9,6 +9,7 @@ body {
   font-size: 1.1rem;
   background: linear-gradient(120deg, #f7fafc 0%, #e0e7ef 100%);
   color: #222;
+  min-height: 100vh;
 }
 
 /* Navigation Bar */
@@ -177,15 +178,34 @@ button[type="submit"] {
 }
 
 /* Fade-in animation */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
 @keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.fade-in {
+  opacity: 0;
+  animation: fadeIn 0.9s ease forwards;
+}
+.fade-in-up {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.6s, transform 0.6s;
+}
+.fade-in-delay-1 { animation-delay: 0.15s; }
+.fade-in-delay-2 { animation-delay: 0.3s; }
+.fade-in-delay-3 { animation-delay: 0.45s; }
+.fade-in-delay-4 { animation-delay: 0.6s; }
+.fade-in-delay-5 { animation-delay: 0.75s; }
+.fade-in-delay-6 { animation-delay: 0.9s; }
+
+.scroll-reveal {
+  opacity: 1 !important;
+  transform: translateY(0) !important;
+  animation: fadeInUp 0.9s cubic-bezier(0.4,0,0.2,1) forwards;
 }
 
 /* Info Cards Section */
@@ -280,6 +300,35 @@ button[type="submit"] {
   color: #2563eb;
   text-decoration: underline;
   font-weight: 500;
+}
+
+/* Modern card and section styles */
+.modern-card {
+  background: #fff;
+  border-radius: 1.2rem;
+  box-shadow: 0 2px 16px rgba(80, 80, 120, 0.08);
+  padding: 2rem 1.5rem;
+  transition: box-shadow 0.2s, transform 0.2s;
+}
+.modern-section {
+  background: #f7fafc;
+  border-radius: 1.2rem;
+  box-shadow: 0 2px 12px #e0e7ef33;
+  padding: 2.5rem 2rem;
+  margin-bottom: 2.5rem;
+}
+.card-hover-animate:hover {
+  transform: translateY(-6px) scale(1.035);
+  box-shadow: 0 8px 32px #2563eb22;
+  z-index: 2;
+}
+
+/* Responsive adjustments for cards/sections */
+@media (max-width: 700px) {
+  .modern-card, .modern-section {
+    padding: 1.2rem 0.7rem;
+    border-radius: 0.9rem;
+  }
 }
 
 @media (max-width: 900px) {

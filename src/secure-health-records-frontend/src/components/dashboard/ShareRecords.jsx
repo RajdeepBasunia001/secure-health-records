@@ -5,47 +5,7 @@ import { getBackendActor } from '../../dfinity';
 import { usePatientRecords } from '../healthRecords/usePatientRecords';
 import SHA256 from 'crypto-js/sha256';
 import { AuthClient } from '@dfinity/auth-client';
-
-// Mock doctor data (replace with backend data later)
-const mockDoctors = [
-  {
-    healthId: 'health-abc',
-    name: 'Dr. Alice Smith',
-    specialty: 'Cardiology',
-    contact: 'alice@example.com',
-  },
-  {
-    healthId: 'health-def',
-    name: 'Dr. Bob Jones',
-    specialty: 'Dermatology',
-    contact: 'bob@example.com',
-  },
-  {
-    healthId: 'health-xyz',
-    name: 'Dr. Carol White',
-    specialty: 'Pediatrics',
-    contact: 'carol@example.com',
-  },
-  // Added new specialties
-  {
-    healthId: 'health-neuro',
-    name: 'Dr. David Lee',
-    specialty: 'Neurology',
-    contact: 'david.lee@neuroclinic.com',
-  },
-  {
-    healthId: 'health-psych',
-    name: 'Dr. Emily Chen',
-    specialty: 'Psychiatry',
-    contact: 'emily.chen@mindhealth.com',
-  },
-  {
-    healthId: 'health-radio',
-    name: 'Dr. Frank Patel',
-    specialty: 'Radiology',
-    contact: 'frank.patel@radiologycenter.com',
-  },
-];
+import { fetchAllDoctors } from '../../canisterApi';
 
 // Mock file data
 const mockFiles = [
@@ -111,15 +71,35 @@ const ShareRecords = () => {
   const [submitting, setSubmitting] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState([]); // [{fileId, permission, expiresAt}]
   const [fileSettings, setFileSettings] = useState({}); // {fileId: {permission, expiresAt}}
-
+  const [doctors, setDoctors] = useState([]);
+  const [loadingDoctors, setLoadingDoctors] = useState(false);
   const { records, loading, error } = usePatientRecords();
 
+  // Fetch all doctors from backend
+  const handleFindDoctors = async () => {
+    setLoadingDoctors(true);
+    setShowDoctors(false);
+    try {
+      const result = await fetchAllDoctors();
+      // Accept both array and {ok: array} shapes
+      let doctorList = [];
+      if (Array.isArray(result)) doctorList = result;
+      else if (result && result.ok) doctorList = result.ok;
+      setDoctors(doctorList);
+      setShowDoctors(true);
+    } catch (e) {
+      setDoctors([]);
+      setShowDoctors(true);
+    }
+    setLoadingDoctors(false);
+  };
+
   // Unique specialties for filter dropdown
-  const specialties = Array.from(new Set(mockDoctors.map(d => d.specialty)));
+  const specialties = Array.from(new Set(doctors.map(d => d.specialty).filter(Boolean)));
 
   // Filtered doctor list
-  const filteredDoctors = mockDoctors.filter(d =>
-    (!searchName || d.name.toLowerCase().includes(searchName.toLowerCase())) &&
+  const filteredDoctors = doctors.filter(d =>
+    (!searchName || (d.name && d.name.toLowerCase().includes(searchName.toLowerCase()))) &&
     (!searchSpecialty || d.specialty === searchSpecialty)
   );
 
@@ -289,9 +269,10 @@ const ShareRecords = () => {
         <button
           className="provider-search-btn"
           style={{ fontSize: '1.1rem', padding: '0.8rem 2.2rem' }}
-          onClick={() => setShowDoctors(v => !v)}
+          onClick={handleFindDoctors}
+          disabled={loadingDoctors}
         >
-          {showDoctors ? 'Hide Doctor List' : 'Find Doctor'}
+          {loadingDoctors ? 'Finding Doctors...' : 'Find Doctor'}
         </button>
       </div>
       {showDoctors && (

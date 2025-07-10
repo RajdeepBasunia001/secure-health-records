@@ -9,6 +9,15 @@ import { AuthClient } from '@dfinity/auth-client';
 const PatientDashboard = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  // --- AUTH GUARD START ---
+  useEffect(() => {
+    const principal = localStorage.getItem('principal');
+    const role = localStorage.getItem('role');
+    if (!principal || role !== 'patient') {
+      navigate('/login?role=patient', { replace: true });
+    }
+  }, [navigate]);
+  // --- AUTH GUARD END ---
   const [principal, setPrincipal] = useState(null);
 
   const [profile, setProfile] = useState(null);
