@@ -9,7 +9,7 @@ import { AuthClient } from '@dfinity/auth-client';
 const PatientDashboard = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  // --- AUTH GUARD START ---
+
   useEffect(() => {
     const principal = localStorage.getItem('principal');
     const role = localStorage.getItem('role');
@@ -17,9 +17,8 @@ const PatientDashboard = () => {
       navigate('/login?role=patient', { replace: true });
     }
   }, [navigate]);
-  // --- AUTH GUARD END ---
-  const [principal, setPrincipal] = useState(null);
 
+  const [principal, setPrincipal] = useState(null);
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showRegistration, setShowRegistration] = useState(false);
@@ -55,6 +54,7 @@ const PatientDashboard = () => {
           setShowRegistration(true);
         }
       } catch (e) {
+        console.error('Error fetching profile:', e);
         setShowRegistration(true);
       }
       setLoading(false);
@@ -73,24 +73,39 @@ const PatientDashboard = () => {
     e.preventDefault();
     setRegLoading(true);
     setRegError('');
+
+    const age = Number(regAge);
+    if (isNaN(age) || age < 0) {
+      setRegError('Age must be a valid non-negative number');
+      setRegLoading(false);
+      return;
+    }
+
     try {
-      const result = await registerPatient(regName, Number(regAge), regGender);
-      console.log('Registration result:', result); // Debug log
-      if (result && result.ok) {
-        setProfile(result.ok); // Use the returned profile directly
+      const result = await registerPatient(regName, age, regGender);
+      console.log('Raw registration result:', JSON.stringify(result, null, 2));
+
+      if (result?.ok) {
+        setProfile(result.ok);
         setShowRegistration(false);
-      } else if (result && result.err) {
+      } else if (result?.err) {
         setRegError(result.err);
         console.error('Registration error:', result.err);
+      } else if ('Ok' in result) {
+        setProfile(result.Ok);
+        setShowRegistration(false);
+      } else if ('Err' in result) {
+        setRegError(result.Err);
+        console.error('Registration error:', result.Err);
       } else {
-        setRegError('Registration failed.');
-        console.error('Registration failed:', result);
+        setRegError('Registration failed. Unknown result format.');
+        console.error('Unexpected result:', result);
       }
     } catch (e) {
-      setRegError('Registration failed.');
-      console.error('Registration exception:', e);
-    }
-    setRegLoading(false);
+  setRegError('Registration failed due to exception.');
+  console.error('Registration exception:', e, JSON.stringify(e));
+  }
+   setRegLoading(false);
   };
 
   if (loading) return <div style={{ padding: 40 }}>Loading...</div>;
@@ -179,4 +194,4 @@ const PatientDashboard = () => {
   );
 };
 
-export default PatientDashboard; 
+export default PatientDashboard;
