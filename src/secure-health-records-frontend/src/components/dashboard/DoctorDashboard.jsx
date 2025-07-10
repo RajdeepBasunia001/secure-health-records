@@ -5,6 +5,20 @@ import Footer from '../common/Footer';
 import { getDoctorProfile, registerDoctor } from '../../canisterApi';
 import { AuthClient } from '@dfinity/auth-client';
 
+function normalizeDoctorProfile(profileObj) {
+  if (!profileObj) return profileObj;
+  // Map all expected fields to snake_case
+  return {
+    health_id: profileObj.health_id || profileObj.healthId || '',
+    name: profileObj.name || '',
+    email: profileObj.email || '',
+    speciality: profileObj.speciality || profileObj.specialty || '',
+    contact: profileObj.contact !== undefined ? profileObj.contact : (profileObj.mobile || ''),
+    registered_at: profileObj.registered_at || profileObj.registeredAt || '',
+    user_principal: profileObj.user_principal || profileObj.userPrincipal || '',
+  };
+}
+
 const DoctorDashboard = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -23,6 +37,9 @@ const DoctorDashboard = () => {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [regName, setRegName] = useState('');
+  const [regEmail, setRegEmail] = useState('');
+  const [regSpeciality, setRegSpeciality] = useState('');
+  const [regContact, setRegContact] = useState('');
   const [regError, setRegError] = useState('');
   const [regLoading, setRegLoading] = useState(false);
 
@@ -40,13 +57,9 @@ const DoctorDashboard = () => {
       try {
         if (!principal) return setProfile(null);
         const prof = await getDoctorProfile(principal);
-        // Handle possible wrapping and field name differences
         let profileObj = prof;
         if (prof && prof.ok) profileObj = prof.ok;
-        if (profileObj && profileObj.healthId && !profileObj.health_id) {
-          profileObj.health_id = profileObj.healthId;
-        }
-        setProfile(profileObj);
+        setProfile(normalizeDoctorProfile(profileObj));
       } catch (e) {
         setProfile(null);
       } finally {
@@ -61,14 +74,26 @@ const DoctorDashboard = () => {
     setRegLoading(true);
     setRegError('');
     try {
-      await registerDoctor(regName);
-      window.location.reload();
+      await registerDoctor(regName, regEmail, regSpeciality, Number(regContact));
+      // Fetch the profile after registration
+      const prof = await getDoctorProfile(principal);
+      let profileObj = prof;
+      if (prof && prof.ok) profileObj = prof.ok;
+      setProfile(normalizeDoctorProfile(profileObj));
     } catch (e) {
       let errorMsg = 'Registration failed.';
       if (e && e.message) {
-        errorMsg = e.message;
+        if (e.message.includes('Email already registered')) {
+          errorMsg = 'This email is already registered. Please use a different email.';
+        } else {
+          errorMsg = e.message;
+        }
       } else if (typeof e === 'string') {
-        errorMsg = e;
+        if (e.includes('Email already registered')) {
+          errorMsg = 'This email is already registered. Please use a different email.';
+        } else {
+          errorMsg = e;
+        }
       }
       setRegError(errorMsg);
       setRegLoading(false);
@@ -83,7 +108,7 @@ const DoctorDashboard = () => {
   };
 
   // Registration UI
-  if (!loading && (!profile || (Array.isArray(profile) && profile.length === 0))) {
+  if (!loading && (!profile || !profile.health_id || !profile.name)) {
     return (
       <div className="doctor-dashboard-layout">
         <header className="doctor-dashboard-header enhanced-header">
@@ -101,6 +126,23 @@ const DoctorDashboard = () => {
             <h3 style={{ marginBottom: 18 }}>Doctor Registration</h3>
             <label htmlFor="doctor-name">Your Name</label>
             <input id="doctor-name" type="text" value={regName} onChange={e => setRegName(e.target.value)} required style={{ width: '100%', margin: '0.5rem 0 1.2rem 0', padding: '0.6rem', borderRadius: 6, border: '1px solid #ccc', fontSize: '1rem' }} />
+            <label htmlFor="doctor-email">Email</label>
+            <input id="doctor-email" type="email" value={regEmail} onChange={e => setRegEmail(e.target.value)} required style={{ width: '100%', margin: '0.5rem 0 1.2rem 0', padding: '0.6rem', borderRadius: 6, border: '1px solid #ccc', fontSize: '1rem' }} />
+            <label htmlFor="doctor-speciality">Speciality</label>
+            <select id="doctor-speciality" value={regSpeciality} onChange={e => setRegSpeciality(e.target.value)} required style={{ width: '100%', margin: '0.5rem 0 1.2rem 0', padding: '0.6rem', borderRadius: 6, border: '1px solid #ccc', fontSize: '1rem' }}>
+              <option value="" disabled>Select Speciality</option>
+              <option value="Cardiology">Cardiology</option>
+              <option value="Dermatology">Dermatology</option>
+              <option value="Orthopedics">Orthopedics</option>
+              <option value="Neurology">Neurology</option>
+              <option value="Oncology">Oncology</option>
+              <option value="Psychiatry">Psychiatry</option>
+              <option value="Radiology">Radiology</option>
+              <option value="Pathology">Pathology</option>
+              <option value="Gastroenterology">Gastroenterology</option>
+            </select>
+            <label htmlFor="doctor-contact">Mobile Number</label>
+            <input id="doctor-contact" type="tel" pattern="[0-9]{10,15}" value={regContact} onChange={e => setRegContact(e.target.value)} required style={{ width: '100%', margin: '0.5rem 0 1.2rem 0', padding: '0.6rem', borderRadius: 6, border: '1px solid #ccc', fontSize: '1rem' }} />
             <button type="submit" className="logout-btn" style={{ width: '100%', marginBottom: 10 }} disabled={regLoading}>{regLoading ? 'Registering...' : 'Register'}</button>
             {regError && <div style={{ color: 'red', marginTop: 8 }}>{regError}</div>}
           </form>

@@ -35,10 +35,10 @@ export async function getDoctorProfile(principalString) {
 }
 
 // Register a new doctor
-export async function registerDoctor(name) {
+export async function registerDoctor(name, email, speciality, contact) {
   const actor = await getBackendActor();
   console.log('registerDoctor called');
-  return actor.register_doctor(name);
+  return actor.register_doctor(name, email, speciality, contact);
 }
 
 // Fetch patient profile by principal string

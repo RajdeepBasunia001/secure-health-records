@@ -118,6 +118,9 @@ pub struct DoctorProfile {
     pub user_principal: Principal,
     pub health_id: String,
     pub name: String,
+    pub email: String,
+    pub speciality: String,
+    pub contact: u64,
     pub registered_at: u64,
 }
 
@@ -483,12 +486,18 @@ fn extend_consent(consent_id: u64, new_expires_at: u64) -> Result<(), String> {
 }
 
 #[ic_cdk::update]
-fn register_doctor(name: String) -> Result<DoctorProfile, String> {
+fn register_doctor(name: String, email: String, speciality: String, contact: u64) -> Result<DoctorProfile, String> {
     let principal = ic_cdk::caller();
-    // Check if already registered
+    // Check if already registered by principal
     let already = DOCTORS.with(|docs| docs.borrow().iter().any(|d| d.user_principal == principal));
     if already {
         return Err("Doctor already registered".to_string());
+    }
+    // Check if email is already registered (case-insensitive)
+    let email_lower = email.to_lowercase();
+    let email_exists = DOCTORS.with(|docs| docs.borrow().iter().any(|d| d.email.to_lowercase() == email_lower));
+    if email_exists {
+        return Err("Email already registered".to_string());
     }
     // Generate unique health ID
     let id = NEXT_DOCTOR_ID.with(|n| {
@@ -503,6 +512,9 @@ fn register_doctor(name: String) -> Result<DoctorProfile, String> {
         user_principal: principal,
         health_id: health_id.clone(),
         name,
+        email,
+        speciality,
+        contact,
         registered_at: now,
     };
     DOCTORS.with(|docs| docs.borrow_mut().push(profile.clone()));

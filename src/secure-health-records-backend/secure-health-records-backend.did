@@ -77,6 +77,9 @@ type DoctorProfile = record {
   user_principal: principal;
   health_id: text;
   name: text;
+  email: text;
+  speciality: text;
+  contact: nat64;
   registered_at: nat64;
 };
 
@@ -114,7 +117,7 @@ service : {
   get_consent_history_for_patient: (patient: principal) -> (vec ConsentHistoryEntry);
   revoke_consent: (consent_id: nat64) -> (variant { ok: null; err: text });
   extend_consent: (consent_id: nat64, new_expires_at: nat64) -> (variant { ok: null; err: text });
-  register_doctor: (name: text) -> (variant { ok: DoctorProfile; err: text });
+  register_doctor: (name: text, email: text, speciality: text, contact: nat64) -> (variant { ok: DoctorProfile; err: text });
   get_doctor_profile: (user_principal: principal) -> (opt DoctorProfile);
   register_patient: (name: text, age: nat8, gender: text) -> (variant { ok: PatientProfile; err: text });
   get_patient_profile: (user_principal: principal) -> (opt PatientProfile);
