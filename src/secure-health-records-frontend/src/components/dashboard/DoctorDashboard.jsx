@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import './DoctorDashboard.css';
 import Footer from '../common/Footer';
-import { getDoctorProfile, registerDoctor } from '../../canisterApi';
+import { getDoctorProfile, registerDoctor, fetchAllDoctors } from '../../canisterApi';
 import { AuthClient } from '@dfinity/auth-client';
 
 function normalizeDoctorProfile(profileObj) {
@@ -84,53 +84,32 @@ const DoctorDashboard = () => {
     setRegLoading(true);
     setRegError('');
     try {
+      // Fetch all doctors
+      const doctors = await fetchAllDoctors();
+      // Check for duplicate email
+      const emailExists = doctors.some(doc => doc.email === regEmail);
+      if (emailExists) {
+        setRegError('A doctor with this email is already registered.');
+        setRegLoading(false);
+        return;
+      }
+      // Proceed with registration if email is unique
       const result = await registerDoctor(regName, regEmail, regSpeciality, Number(regContact));
-      console.log('registerDoctor result (raw):', result);
-      if (result && typeof result === 'object' && 'ok' in result) {
-        alert(result.ok);
-        // Fetch the profile after successful registration
-        console.log('Fetching doctor profile for principal:', principal);
-        const prof = await getDoctorProfile(principal);
-        console.log('Fetched doctor profile:', prof);
-        let profileObj = prof;
-        if (Array.isArray(prof) && prof[0]) profileObj = prof[0];
-        else if (prof && prof.ok && Array.isArray(prof.ok) && prof.ok[0]) profileObj = prof.ok[0];
-        else if (prof && prof.ok) profileObj = prof.ok;
-        setProfile(normalizeDoctorProfile(profileObj));
-        navigate('/dashboard/doctor/profile');
-      } else if (result === 'ok' || result === "Doctor registered successfully") {
+      if (result === 'ok' || result === "Doctor registered successfully") {
         alert('Doctor registered successfully');
         // Fetch the profile after successful registration
-        console.log('Fetching doctor profile for principal:', principal);
         const prof = await getDoctorProfile(principal);
-        console.log('Fetched doctor profile:', prof);
         let profileObj = prof;
         if (Array.isArray(prof) && prof[0]) profileObj = prof[0];
         else if (prof && prof.ok && Array.isArray(prof.ok) && prof.ok[0]) profileObj = prof.ok[0];
         else if (prof && prof.ok) profileObj = prof.ok;
         setProfile(normalizeDoctorProfile(profileObj));
         navigate('/dashboard/doctor/profile');
-      } else if (result && result.err) {
-        setRegError(result.err);
       } else {
         setRegError('Registration failed.');
       }
     } catch (e) {
-      let errorMsg = 'Registration failed.';
-      if (e && e.message) {
-        if (e.message.includes('Email already registered')) {
-          errorMsg = 'This email is already registered. Please use a different email.';
-        } else {
-          errorMsg = e.message;
-        }
-      } else if (typeof e === 'string') {
-        if (e.includes('Email already registered')) {
-          errorMsg = 'This email is already registered. Please use a different email.';
-        } else {
-          errorMsg = e;
-        }
-      }
-      setRegError(errorMsg);
+      setRegError('Registration failed.');
     }
     setRegLoading(false);
   };
