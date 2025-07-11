@@ -1,6 +1,8 @@
 use candid::{CandidType, Principal};
 use ic_cdk::api::time;
 use serde::{Deserialize, Serialize};
+use std::cell::RefCell;
+use ic_cdk_macros::*;
 
 #[derive(CandidType, Deserialize, Serialize, Clone)]
 pub enum Category {
@@ -141,7 +143,7 @@ thread_local! {
     static NEXT_ACCESS_LOG_ID: std::cell::RefCell<u64> = std::cell::RefCell::new(1);
     static CONSENT_HISTORY: std::cell::RefCell<Vec<ConsentHistoryEntry>> = std::cell::RefCell::new(Vec::new());
     static NEXT_CONSENT_HISTORY_ID: std::cell::RefCell<u64> = std::cell::RefCell::new(1);
-    static DOCTORS: std::cell::RefCell<Vec<DoctorProfile>> = std::cell::RefCell::new(Vec::new());
+    static DOCTORS: RefCell<Vec<DoctorProfile>> = RefCell::new(Vec::new());
     static NEXT_DOCTOR_ID: std::cell::RefCell<u64> = std::cell::RefCell::new(1);
 }
 
@@ -486,39 +488,18 @@ fn extend_consent(consent_id: u64, new_expires_at: u64) -> Result<(), String> {
 }
 
 #[ic_cdk::update]
-fn register_doctor(name: String, email: String, speciality: String, contact: u64) -> Result<DoctorProfile, String> {
-    let principal = ic_cdk::caller();
-    // Check if already registered by principal
-    let already = DOCTORS.with(|docs| docs.borrow().iter().any(|d| d.user_principal == principal));
-    if already {
-        return Err("Doctor already registered".to_string());
-    }
-    // Check if email is already registered (case-insensitive)
-    let email_lower = email.to_lowercase();
-    let email_exists = DOCTORS.with(|docs| docs.borrow().iter().any(|d| d.email.to_lowercase() == email_lower));
-    if email_exists {
-        return Err("Email already registered".to_string());
-    }
-    // Generate unique health ID
-    let id = NEXT_DOCTOR_ID.with(|n| {
-        let mut n = n.borrow_mut();
-        let id = *n;
-        *n += 1;
-        id
-    });
-    let health_id = format!("DOC-{:06}", id);
-    let now = time();
+fn register_doctor(name: String, email: String, speciality: String, contact: u64) -> String {
     let profile = DoctorProfile {
-        user_principal: principal,
-        health_id: health_id.clone(),
+        user_principal: ic_cdk::caller(),
+        health_id: format!("HID-{}", ic_cdk::caller()),
         name,
         email,
         speciality,
         contact,
-        registered_at: now,
+        registered_at: ic_cdk::api::time(),
     };
-    DOCTORS.with(|docs| docs.borrow_mut().push(profile.clone()));
-    Ok(profile)
+    DOCTORS.with(|docs| docs.borrow_mut().push(profile));
+    "ok".to_string()
 }
 
 #[ic_cdk::query]

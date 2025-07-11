@@ -19,6 +19,13 @@ function normalizeDoctorProfile(profileObj) {
   };
 }
 
+const TABS = [
+  { key: 'profile', label: 'Profile', icon: '👤', path: '/dashboard/doctor/profile' },
+  { key: 'requests', label: 'Patient Requests', icon: '📥', path: '/dashboard/doctor/requests' },
+  { key: 'lookup', label: 'Patient Lookup', icon: '🔍', path: '/dashboard/doctor/lookup' },
+  { key: 'upload-notes', label: 'Upload Notes/Prescriptions', icon: '📝', path: '/dashboard/doctor/upload-notes' },
+];
+
 const DoctorDashboard = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -58,7 +65,10 @@ const DoctorDashboard = () => {
         if (!principal) return setProfile(null);
         const prof = await getDoctorProfile(principal);
         let profileObj = prof;
-        if (prof && prof.ok) profileObj = prof.ok;
+        // Accept both array and {ok: array} shapes, and extract first element if array
+        if (Array.isArray(prof) && prof[0]) profileObj = prof[0];
+        else if (prof && prof.ok && Array.isArray(prof.ok) && prof.ok[0]) profileObj = prof.ok[0];
+        else if (prof && prof.ok) profileObj = prof.ok;
         setProfile(normalizeDoctorProfile(profileObj));
       } catch (e) {
         setProfile(null);
@@ -74,12 +84,37 @@ const DoctorDashboard = () => {
     setRegLoading(true);
     setRegError('');
     try {
-      await registerDoctor(regName, regEmail, regSpeciality, Number(regContact));
-      // Fetch the profile after registration
-      const prof = await getDoctorProfile(principal);
-      let profileObj = prof;
-      if (prof && prof.ok) profileObj = prof.ok;
-      setProfile(normalizeDoctorProfile(profileObj));
+      const result = await registerDoctor(regName, regEmail, regSpeciality, Number(regContact));
+      console.log('registerDoctor result (raw):', result);
+      if (result && typeof result === 'object' && 'ok' in result) {
+        alert(result.ok);
+        // Fetch the profile after successful registration
+        console.log('Fetching doctor profile for principal:', principal);
+        const prof = await getDoctorProfile(principal);
+        console.log('Fetched doctor profile:', prof);
+        let profileObj = prof;
+        if (Array.isArray(prof) && prof[0]) profileObj = prof[0];
+        else if (prof && prof.ok && Array.isArray(prof.ok) && prof.ok[0]) profileObj = prof.ok[0];
+        else if (prof && prof.ok) profileObj = prof.ok;
+        setProfile(normalizeDoctorProfile(profileObj));
+        navigate('/dashboard/doctor/profile');
+      } else if (result === 'ok' || result === "Doctor registered successfully") {
+        alert('Doctor registered successfully');
+        // Fetch the profile after successful registration
+        console.log('Fetching doctor profile for principal:', principal);
+        const prof = await getDoctorProfile(principal);
+        console.log('Fetched doctor profile:', prof);
+        let profileObj = prof;
+        if (Array.isArray(prof) && prof[0]) profileObj = prof[0];
+        else if (prof && prof.ok && Array.isArray(prof.ok) && prof.ok[0]) profileObj = prof.ok[0];
+        else if (prof && prof.ok) profileObj = prof.ok;
+        setProfile(normalizeDoctorProfile(profileObj));
+        navigate('/dashboard/doctor/profile');
+      } else if (result && result.err) {
+        setRegError(result.err);
+      } else {
+        setRegError('Registration failed.');
+      }
     } catch (e) {
       let errorMsg = 'Registration failed.';
       if (e && e.message) {
@@ -96,8 +131,8 @@ const DoctorDashboard = () => {
         }
       }
       setRegError(errorMsg);
-      setRegLoading(false);
     }
+    setRegLoading(false);
   };
 
   const handleLogout = () => {
@@ -151,6 +186,7 @@ const DoctorDashboard = () => {
     );
   }
 
+  // Main dashboard with sidebar links and routed content
   return (
     <div className="doctor-dashboard-layout">
       <header className="doctor-dashboard-header enhanced-header">
@@ -158,42 +194,54 @@ const DoctorDashboard = () => {
           <span className="dashboard-logo">🩺</span>
           <div>
             <h2>Doctor Dashboard</h2>
-            <div className="dashboard-subtitle">Manage patient requests and records</div>
+            <div className="dashboard-subtitle">Welcome, Dr. {profile?.name}</div>
           </div>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1.2rem' }}>
-          {profile && ((Array.isArray(profile) ? profile[0] : profile)) && (
-            <div className="dashboard-user">
-              <span style={{ fontWeight: 500 }}>
-                Dr. {(Array.isArray(profile) ? profile[0]?.name : profile.name)}
-              </span>
-              &nbsp;|&nbsp;
-              <span style={{ color: '#fff', background: '#6e5edb', borderRadius: 6, padding: '0.2rem 0.7rem', fontSize: '0.98rem', marginLeft: 4 }}>
-                ID: {(Array.isArray(profile) ? profile[0]?.health_id : profile.health_id)}
-              </span>
-            </div>
-          )}
-          <button className="logout-btn" onClick={handleLogout}>Logout</button>
-        </div>
+        <button className="logout-btn" onClick={handleLogout}>Logout</button>
       </header>
       <div className="doctor-dashboard-body">
         <aside className="doctor-dashboard-sidebar enhanced-sidebar">
           <nav>
             <ul>
-              <li className={location.pathname.endsWith('/requests') ? 'active' : ''}>
-                <Link to="/dashboard/doctor/requests"><span className="sidebar-icon">📥</span> Patient Requests</Link>
-              </li>
-              <li className={location.pathname.endsWith('/lookup') ? 'active' : ''}>
-                <Link to="/dashboard/doctor/lookup"><span className="sidebar-icon">🔍</span> Patient Lookup</Link>
-              </li>
-              <li className={location.pathname.endsWith('/upload-notes') ? 'active' : ''}>
-                <Link to="/dashboard/doctor/upload-notes"><span className="sidebar-icon">📝</span> Upload Notes/Prescriptions</Link>
-              </li>
+              {TABS.map(tab => (
+                <li key={tab.key} className={location.pathname === tab.path ? 'active' : ''}>
+                  <Link
+                    to={tab.path}
+                    style={{
+                      color: location.pathname === tab.path ? '#4b3ca7' : '#3a3576',
+                      fontWeight: location.pathname === tab.path ? 'bold' : 'normal',
+                      fontSize: '1.08rem',
+                      width: '100%',
+                      textAlign: 'left',
+                      padding: '0.7rem 1.1rem 0.7rem 0.7rem',
+                      borderRadius: '0.5rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.7rem',
+                      textDecoration: 'none',
+                    }}
+                  >
+                    <span className="sidebar-icon">{tab.icon}</span> {tab.label}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </nav>
         </aside>
         <main className="doctor-dashboard-content enhanced-content">
-          <Outlet />
+          {location.pathname === '/dashboard/doctor/profile' && profile && (
+            <div style={{maxWidth: 480, margin: '0 auto', background: '#fff', borderRadius: 10, boxShadow: '0 2px 8px #4b3ca71a', padding: '2rem 2.5rem'}}>
+              <h3 style={{marginBottom: 18, color: '#4b3ca7'}}>Your Profile</h3>
+              <ul style={{fontSize: '1.08rem', color: '#333', listStyle: 'none', padding: 0}}>
+                <li><b>Name:</b> {profile.name}</li>
+                <li><b>Email:</b> {profile.email}</li>
+                <li><b>Speciality:</b> {profile.speciality}</li>
+                <li><b>Contact:</b> {profile.contact}</li>
+                <li><b>Health ID:</b> <span style={{fontFamily: 'monospace', fontSize: '0.93rem'}}>{profile.health_id}</span></li>
+              </ul>
+            </div>
+          )}
+          {location.pathname !== '/dashboard/doctor/profile' && <Outlet />}
         </main>
       </div>
       <Footer />
