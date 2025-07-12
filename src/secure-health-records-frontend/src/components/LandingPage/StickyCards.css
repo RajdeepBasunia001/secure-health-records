@@ -1,0 +1,65 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  background: #f0f0f0;
+}
+
+.empty-section {
+  height: 100vh;
+  background: grey;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #fff;
+}
+
+.cards-container {
+  /* Let wrappers stack naturally */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 80px; /* Optional: space between card wrappers */
+    padding: 20px;
+    width: 100%;
+    max-width: 1200px; /* Optional: limit max width */
+    margin: 0 auto; /* Center the container */
+    position: relative; /* For absolute positioning of cards */
+    z-index: 1; /* Ensure cards are above the background */
+    justify-content: center;
+}
+
+.card-wrapper {
+  height: 100vh;
+  /* padding-top: 15vh; */
+  position: relative;
+  width: 50vw;
+  margin: auto;
+}
+
+.card-wrapper:last-of-type {
+  height: 85vh;
+  padding-bottom: 15vh;
+}
+
+.card {
+  width: 100%;
+  max-width: 70vh;
+  height: calc(70vh - 15vh);
+  margin: 0 auto;
+  background: #fff;
+  border-radius: 10px;
+  padding: 50px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+.card-wrapper:last-of-type .card {
+  height: calc(85vh - 50vh);
+}

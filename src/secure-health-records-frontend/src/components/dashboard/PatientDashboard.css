@@ -2,12 +2,12 @@
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  background: linear-gradient(135deg, #ede9fe 0%, #f8fafc 100%);
+  background: linear-gradient(135deg, var(--parchment-bg-alt) 0%, var(--parchment-bg) 100%);
 }
 
 .patient-dashboard-header.enhanced-header {
-  background: linear-gradient(90deg, #7c3aed 60%, #a78bfa 100%);
-  color: #fff;
+  background: linear-gradient(90deg, var(--primary-accent) 60%, var(--parchment-bg-dark) 100%);
+  color: var(--text-white);
   padding: 1.2rem 2rem;
   font-size: 1.5rem;
   font-weight: 700;
@@ -16,7 +16,7 @@
   align-items: center;
   justify-content: space-between;
   border-radius: 0 0 18px 18px;
-  box-shadow: 0 2px 12px rgba(124, 58, 237, 0.08);
+  box-shadow: var(--shadow-medium);
 }
 
 .header-left {
@@ -27,24 +27,24 @@
 
 .dashboard-logo {
   font-size: 2.2rem;
-  background: #fff;
-  color: #7c3aed;
+  background: var(--text-white);
+  color: var(--primary-accent);
   border-radius: 50%;
   padding: 0.3rem 0.5rem;
-  box-shadow: 0 2px 8px rgba(124, 58, 237, 0.10);
+  box-shadow: var(--shadow-light);
 }
 
 .dashboard-subtitle {
   font-size: 1.1rem;
   font-weight: 400;
-  color: #ede9fe;
+  color: var(--parchment-bg-alt);
   margin-top: 0.2rem;
 }
 
 .dashboard-user {
   font-size: 1.05rem;
-  color: #ede9fe;
-  background: rgba(124, 58, 237, 0.15);
+  color: var(--parchment-bg-alt);
+  background: rgba(139, 157, 195, 0.15);
   padding: 0.4rem 1.1rem;
   border-radius: 999px;
   font-weight: 500;
@@ -52,7 +52,7 @@
 
 .user-principal {
   font-family: monospace;
-  color: #fff;
+  color: var(--text-white);
 }
 
 .patient-dashboard-body {
@@ -62,11 +62,11 @@
 
 .patient-dashboard-sidebar.enhanced-sidebar {
   width: 220px;
-  background: linear-gradient(120deg, #ede9fe 60%, #f3e8ff 100%);
+  background: linear-gradient(120deg, var(--parchment-bg-alt) 60%, var(--parchment-bg) 100%);
   padding: 2rem 1rem;
   min-height: 100%;
   border-radius: 0 18px 18px 0;
-  box-shadow: 2px 0 12px rgba(124, 58, 237, 0.04);
+  box-shadow: var(--shadow-light);
 }
 
 .patient-dashboard-sidebar ul {
@@ -80,7 +80,7 @@
 }
 
 .patient-dashboard-sidebar a {
-  color: #5b21b6;
+  color: var(--primary-accent);
   text-decoration: none;
   font-size: 1.1rem;
   font-weight: 500;
@@ -90,7 +90,7 @@
   align-items: center;
   gap: 0.7rem;
   transition: background 0.2s, color 0.2s, box-shadow 0.2s;
-  box-shadow: 0 1px 4px rgba(124, 58, 237, 0.03);
+  box-shadow: var(--shadow-light);
 }
 
 .sidebar-icon {
@@ -100,18 +100,18 @@
 
 .patient-dashboard-sidebar li.active a,
 .patient-dashboard-sidebar a:hover {
-  background: #c7d2fe;
-  color: #312e81;
-  box-shadow: 0 2px 8px rgba(124, 58, 237, 0.08);
+  background: var(--primary-accent);
+  color: var(--text-white);
+  box-shadow: var(--shadow-medium);
 }
 
 .patient-dashboard-content.enhanced-content {
   flex: 1;
   padding: 2rem 2.5rem;
-  background: #fff;
+  background: var(--text-white);
   border-radius: 24px;
   margin: 2rem 2rem 2rem 0;
-  box-shadow: 0 4px 24px rgba(124, 58, 237, 0.08);
+  box-shadow: var(--shadow-medium);
   min-height: 400px;
   display: flex;
   flex-direction: column;
@@ -147,18 +147,18 @@
 }
 
 .logout-btn {
-  background: linear-gradient(90deg, #7c3aed 60%, #a78bfa 100%);
-  color: #fff;
+  background: linear-gradient(90deg, var(--primary-accent) 60%, var(--parchment-bg-dark) 100%);
+  color: var(--text-white);
   border: none;
   border-radius: 999px;
   padding: 0.5rem 1.3rem;
   font-size: 1.05rem;
   font-weight: 600;
   cursor: pointer;
-  box-shadow: 0 2px 8px rgba(124, 58, 237, 0.08);
+  box-shadow: var(--shadow-light);
   transition: background 0.2s, color 0.2s;
 }
 .logout-btn:hover {
-  background: linear-gradient(90deg, #5b21b6 60%, #a78bfa 100%);
-  color: #ede9fe;
+  background: linear-gradient(90deg, var(--parchment-bg-dark) 60%, var(--primary-accent) 100%);
+  color: var(--parchment-bg-alt);
 } 

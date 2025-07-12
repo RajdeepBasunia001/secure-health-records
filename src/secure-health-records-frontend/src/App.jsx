@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import NavigationBar from './components/layout/NavigationBar';
-import LandingPage from './components/layout/LandingPage';
+import LandingPage from './components/LandingPage/LandingPage';
 import RoleSelection from './components/auth/RoleSelection';
 import Login from './components/auth/Login';
 import PatientDashboard from './components/dashboard/PatientDashboard';
@@ -57,6 +57,7 @@ function DoctorUploadNotes() {
 function App() {
   const location = useLocation();
   const isDashboard = location.pathname.startsWith('/dashboard');
+  const isLanding = location.pathname === '/';
 
   // Debug AuthClient session and principal on every load
   useEffect(() => {
@@ -70,7 +71,7 @@ function App() {
 
   return (
     <>
-      {!isDashboard && <NavigationBar />}
+      {!isDashboard && !isLanding && <NavigationBar />}
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/platform" element={<Placeholder title="Platform" />} />

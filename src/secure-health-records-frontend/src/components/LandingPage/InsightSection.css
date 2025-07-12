@@ -1,0 +1,73 @@
+.feature-card {
+  background: #f9f9fb;
+  border-radius: 12px;
+  padding: 1.5rem;
+  max-width: 300px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+
+}
+
+.feature-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.08);
+}
+
+
+.feature-card h4 {
+  margin: 0.8rem 0 0.5rem;
+  font-size: 1.1rem;
+  color: #222;
+}
+
+.feature-card p {
+  color: #666;
+  font-size: 0.95rem;
+}
+
+.icon {
+  color: #0077cc;
+  width: 32px;
+  height: 32px;
+  margin-bottom: 0.5rem;
+  animation: popIn 0.6s ease;
+}
+
+/* Animations */
+@keyframes fadeInUp {
+  0% {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes popIn {
+  0% {
+    transform: scale(0.7);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .insight-heading {
+    font-size: 1.5rem;
+  }
+
+  .insight-features {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .feature-card {
+    width: 90%;
+  }
+}

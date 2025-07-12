@@ -2,7 +2,7 @@
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background: #f7f8fc;
+  background: var(--parchment-bg-alt);
 }
 
 .doctor-dashboard-header {
@@ -10,9 +10,9 @@
   justify-content: space-between;
   align-items: center;
   padding: 1.2rem 2.5rem 1.2rem 2rem;
-  background: linear-gradient(90deg, #4b3ca7 80%, #6e5edb 100%);
-  color: #fff;
-  box-shadow: 0 4px 24px 0 rgba(75,60,167,0.13), 0 1.5px 0 #6e5edb;
+  background: linear-gradient(90deg, var(--primary-accent) 80%, var(--parchment-bg-dark) 100%);
+  color: var(--text-white);
+  box-shadow: var(--shadow-medium);
   position: relative;
   z-index: 2;
   animation: fadeInDown 0.7s cubic-bezier(0.4,0,0.2,1);
@@ -32,7 +32,7 @@
 .dashboard-logo {
   font-size: 2.2rem;
   margin-right: 0.7rem;
-  filter: drop-shadow(0 2px 6px #6e5edb44);
+  filter: drop-shadow(0 2px 6px var(--primary-accent));
   transition: transform 0.2s;
 }
 .dashboard-logo:hover {
@@ -41,22 +41,22 @@
 
 .dashboard-subtitle {
   font-size: 1.1rem;
-  color: #e0e0f7;
+  color: var(--parchment-bg-alt);
 }
 
 .doctor-dashboard-body {
   display: flex;
   flex: 1;
   min-height: 0;
-  background: linear-gradient(120deg, #edeaff 60%, #f7f8fc 100%);
+  background: linear-gradient(120deg, var(--parchment-bg-alt) 60%, var(--parchment-bg) 100%);
   transition: background 0.4s;
 }
 
 .doctor-dashboard-sidebar {
   width: 220px;
-  background: #edeaff;
+  background: var(--parchment-bg-alt);
   padding: 2rem 0.5rem 2rem 1.2rem;
-  box-shadow: 2px 0 8px rgba(75,60,167,0.04);
+  box-shadow: var(--shadow-light);
   transition: box-shadow 0.3s, background 0.3s;
   z-index: 1;
 }
@@ -82,10 +82,10 @@
 
 .doctor-dashboard-sidebar li.active a {
   font-weight: bold;
-  color: #4b3ca7;
-  background: #fff;
+  color: var(--primary-accent);
+  background: var(--text-white);
   border-radius: 0.5rem 0 0 0.5rem;
-  box-shadow: 0 2px 8px #4b3ca71a;
+  box-shadow: var(--shadow-light);
 }
 .doctor-dashboard-sidebar li.active::before {
   content: '';
@@ -94,9 +94,9 @@
   top: 0.2rem;
   height: 2.2rem;
   width: 5px;
-  background: linear-gradient(180deg, #6e5edb 0%, #4b3ca7 100%);
+  background: linear-gradient(180deg, var(--primary-accent) 0%, var(--parchment-bg-dark) 100%);
   border-radius: 4px;
-  box-shadow: 0 0 8px #6e5edb55;
+  box-shadow: 0 0 8px var(--primary-accent);
   animation: slideInBar 0.4s cubic-bezier(0.4,0,0.2,1);
 }
 @keyframes slideInBar {
@@ -105,7 +105,7 @@
 }
 
 .doctor-dashboard-sidebar a {
-  color: #3a3576;
+  color: var(--primary-accent);
   text-decoration: none;
   font-size: 1.08rem;
   display: block;
@@ -115,19 +115,19 @@
 }
 
 .doctor-dashboard-sidebar a:hover, .doctor-dashboard-sidebar a:focus {
-  color: #fff;
-  background: linear-gradient(90deg, #6e5edb 60%, #4b3ca7 100%);
-  box-shadow: 0 2px 12px #4b3ca71a;
+  color: var(--text-white);
+  background: linear-gradient(90deg, var(--primary-accent) 60%, var(--parchment-bg-dark) 100%);
+  box-shadow: var(--shadow-medium);
   transform: translateX(4px) scale(1.04);
 }
 
 .doctor-dashboard-content {
   flex: 1;
   padding: 2.5rem 2.5rem 2rem 2.5rem;
-  background: #fff;
+  background: var(--text-white);
   border-radius: 0 0.7rem 0.7rem 0;
   min-height: 600px;
-  box-shadow: 0 2px 8px rgba(75,60,167,0.04);
+  box-shadow: var(--shadow-light);
   animation: fadeInContent 0.7s cubic-bezier(0.4,0,0.2,1);
 }
 @keyframes fadeInContent {
@@ -136,8 +136,8 @@
 }
 
 .logout-btn {
-  background: #fff;
-  color: #4b3ca7;
+  background: var(--text-white);
+  color: var(--primary-accent);
   border: none;
   border-radius: 5px;
   padding: 0.5rem 1.1rem;
@@ -145,17 +145,17 @@
   cursor: pointer;
   font-weight: 500;
   transition: background 0.2s, color 0.2s, box-shadow 0.2s;
-  box-shadow: 0 1px 4px #4b3ca71a;
+  box-shadow: var(--shadow-light);
 }
 
 .logout-btn:hover, .logout-btn:focus {
-  background: #e0e0f7;
-  color: #2d246b;
-  box-shadow: 0 2px 8px #4b3ca71a;
+  background: var(--parchment-bg-alt);
+  color: var(--parchment-bg-dark);
+  box-shadow: var(--shadow-medium);
 }
 
 .dashboard-user {
   font-size: 1.05rem;
-  color: #e0e0f7;
-  text-shadow: 0 1px 2px #4b3ca755;
+  color: var(--parchment-bg-alt);
+  text-shadow: var(--shadow-light);
 } 

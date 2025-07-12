@@ -1,0 +1,121 @@
+.login-container {
+  background-color: #f4f3ee;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+}
+
+@media (max-width: 600px) {
+  .login-container {
+    min-height: 80vh;
+    padding: 2rem 0;
+  }
+  .login-card {
+    width: 95vw;
+    padding: 16px;
+  }
+}
+
+.login-card {
+  background: transparent;
+  padding: 32px;
+  width: 320px;
+  text-align: center;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+.login-subheading {
+  font-size: 0.9rem;
+  color: #555;
+  margin-bottom: 1rem;
+}
+
+.login-logo {
+  font-weight: 700;
+  font-size: 1.8rem;
+  margin-bottom: 24px;
+}
+
+.login-input {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 4px;
+}
+
+.login-input input {
+  flex: 1;
+  border: none;
+  outline: none;
+  padding: 10px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  background: transparent;
+}
+
+.submit-btn {
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  font-weight: bolder;
+  margin: 2px 2px;
+}
+
+.login-option {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin: 10px 0;
+  cursor: pointer;
+  background: white;
+  transition: background 0.2s;
+}
+
+.login-option:hover {
+  background: #f0f0f0;
+}
+
+.login-option img {
+  width: 18px;
+  margin-right: 10px;
+}
+
+.arrow {
+  font-size: 1.2rem;
+}
+
+.passkey-link {
+  display: block;
+  font-size: 0.85rem;
+  color: #5c6ac4;
+  margin-top: 16px;
+  text-decoration: none;
+}
+
+.protected-text {
+  font-size: 0.75rem;
+  color: #777;
+  margin-top: 24px;
+}
+
+.medichain-tag {
+  font-weight: bold;
+  color: #222;
+}
+
+.submit-btn,
+.login-option {
+    font-weight: bold;
+    color: rgba(43, 43, 43, 0.8);
+}
+
+.submit-btn:active,
+.login-option:active{
+  color: blue;
+}

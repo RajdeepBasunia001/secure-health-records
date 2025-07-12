@@ -21,6 +21,9 @@
   "dependencies": {
     "@dfinity/auth-client": "^2.4.1",
     "crypto-js": "^4.2.0",
-    "framer-motion": "^12.23.3"
+    "framer-motion": "^12.23.3",
+    "lucide-react": "^0.525.0",
+    "react-slick": "^0.30.3",
+    "slick-carousel": "^1.8.1"
   }
 }
