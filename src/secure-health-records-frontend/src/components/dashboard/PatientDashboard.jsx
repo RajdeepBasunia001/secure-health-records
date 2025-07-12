@@ -27,6 +27,8 @@ const PatientDashboard = () => {
   const [regGender, setRegGender] = useState('');
   const [regError, setRegError] = useState('');
   const [regLoading, setRegLoading] = useState(false);
+  const [regEmail, setRegEmail] = useState('');
+  const [regContact, setRegContact] = useState('');
 
   useEffect(() => {
     AuthClient.create().then(authClient => {
@@ -80,32 +82,29 @@ const PatientDashboard = () => {
       setRegLoading(false);
       return;
     }
-
+    const contact = Number(regContact);
+    if (isNaN(contact) || contact < 0) {
+      setRegError('Contact must be a valid non-negative number');
+      setRegLoading(false);
+      return;
+    }
     try {
-      const result = await registerPatient(regName, age, regGender);
+      const result = await registerPatient(regName, age, regGender, regEmail, contact);
       console.log('Raw registration result:', JSON.stringify(result, null, 2));
 
-      if (result?.ok) {
-        setProfile(result.ok);
+      if (result === 'ok') {
         setShowRegistration(false);
-      } else if (result?.err) {
-        setRegError(result.err);
-        console.error('Registration error:', result.err);
-      } else if ('Ok' in result) {
-        setProfile(result.Ok);
-        setShowRegistration(false);
-      } else if ('Err' in result) {
-        setRegError(result.Err);
-        console.error('Registration error:', result.Err);
+        // Optionally, fetch profile again here
+        window.location.reload();
       } else {
-        setRegError('Registration failed. Unknown result format.');
-        console.error('Unexpected result:', result);
+        setRegError(result || 'Registration failed.');
+        console.error('Registration error:', result);
       }
     } catch (e) {
-  setRegError('Registration failed due to exception.');
-  console.error('Registration exception:', e, JSON.stringify(e));
-  }
-   setRegLoading(false);
+      setRegError('Registration failed due to exception.');
+      console.error('Registration exception:', e, JSON.stringify(e));
+    }
+    setRegLoading(false);
   };
 
   if (loading) return <div style={{ padding: 40 }}>Loading...</div>;
@@ -137,6 +136,10 @@ const PatientDashboard = () => {
               <option value="Male">Male</option>
               <option value="Other">Other</option>
             </select>
+            <label htmlFor="patient-email">Email</label>
+            <input id="patient-email" type="email" value={regEmail} onChange={e => setRegEmail(e.target.value)} required style={{ width: '100%', margin: '0.5rem 0 1.2rem 0', padding: '0.6rem', borderRadius: 6, border: '1px solid #ccc', fontSize: '1rem' }} />
+            <label htmlFor="patient-contact">Contact</label>
+            <input id="patient-contact" type="number" min="0" value={regContact} onChange={e => setRegContact(e.target.value)} required style={{ width: '100%', margin: '0.5rem 0 1.2rem 0', padding: '0.6rem', borderRadius: 6, border: '1px solid #ccc', fontSize: '1rem' }} />
             <button type="submit" className="logout-btn" style={{ width: '100%', marginBottom: 10 }} disabled={regLoading}>{regLoading ? 'Registering...' : 'Register'}</button>
             {regError && <div style={{ color: 'red', marginTop: 8 }}>{regError}</div>}
           </form>
@@ -156,7 +159,13 @@ const PatientDashboard = () => {
           </div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1.2rem' }}>
-          {profile && <div className="dashboard-user">Health ID: <span className="user-principal">{profile.health_id}</span></div>}
+          {profile && (
+            <div className="dashboard-user">
+              Health ID: <span className="user-principal">{profile.health_id}</span><br />
+              {profile.email && <>Email: <span>{profile.email}</span><br /></>}
+              {profile.contact && <>Contact: <span>{profile.contact}</span></>}
+            </div>
+          )}
           <button className="logout-btn" onClick={handleLogout}>Logout</button>
         </div>
       </header>

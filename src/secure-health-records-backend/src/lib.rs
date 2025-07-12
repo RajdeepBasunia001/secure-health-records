@@ -126,8 +126,78 @@ pub struct DoctorProfile {
     pub registered_at: u64,
 }
 
-mod patient;
-pub use patient::PatientProfile;
+// --- Patient Logic (merged from patient.rs) ---
+
+#[derive(CandidType, Deserialize, Serialize, Clone)]
+pub struct PatientProfile {
+    pub user_principal: Principal,
+    pub health_id: String,
+    pub name: String,
+    pub age: u8,
+    pub gender: String,
+    pub email: String,
+    pub contact: u64,
+    pub registered_at: u64,
+}
+
+thread_local! {
+    static PATIENTS: std::cell::RefCell<Vec<PatientProfile>> = std::cell::RefCell::new(Vec::new());
+    static NEXT_PATIENT_ID: std::cell::RefCell<u64> = std::cell::RefCell::new(1);
+}
+
+fn register_patient_internal(name: String, age: u8, gender: String, email: String, contact: u64) -> Result<PatientProfile, String> {
+    ic_cdk::println!("[DEBUG] register_patient called: name={}, age={}, gender={}, email={}, contact={}", name, age, gender, email, contact);
+    let principal = ic_cdk::caller();
+    // Check if already registered
+    let already = PATIENTS.with(|pats| pats.borrow().iter().any(|p| p.user_principal == principal));
+    if already {
+        return Err("Patient already registered".to_string());
+    }
+    // Generate unique health ID
+    let id = NEXT_PATIENT_ID.with(|n| {
+        let mut n = n.borrow_mut();
+        let id = *n;
+        *n += 1;
+        id
+    });
+    let health_id = format!("PAT-{:06}", id);
+    let now = time();
+    let profile = PatientProfile {
+        user_principal: principal,
+        health_id: health_id.clone(),
+        name,
+        age,
+        gender,
+        email,
+        contact,
+        registered_at: now,
+    };
+    PATIENTS.with(|pats| pats.borrow_mut().push(profile.clone()));
+    Ok(profile)
+}
+
+#[ic_cdk::update]
+pub fn register_patient(name: String, age: u8, gender: String, email: String, contact: u64) -> String {
+    match register_patient_internal(name, age, gender, email, contact) {
+        Ok(_profile) => "ok".to_string(),
+        Err(e) => e,
+    }
+}
+
+#[ic_cdk::query]
+pub fn get_patient_profile(principal: Principal) -> Option<PatientProfile> {
+    PATIENTS.with(|pats| pats.borrow().iter().find(|p| p.user_principal == principal).cloned())
+}
+
+#[ic_cdk::query]
+pub fn get_patient_by_health_id(health_id: String) -> Option<PatientProfile> {
+    PATIENTS.with(|pats| pats.borrow().iter().find(|p| p.health_id == health_id).cloned())
+}
+
+#[ic_cdk::query]
+pub fn debug_list_patients() -> Vec<PatientProfile> {
+    PATIENTS.with(|pats| pats.borrow().clone())
+}
 
 // Storage
 thread_local! {
@@ -510,21 +580,6 @@ fn get_doctor_profile(principal: Principal) -> Option<DoctorProfile> {
 #[ic_cdk::query]
 fn debug_list_doctors() -> Vec<DoctorProfile> {
     DOCTORS.with(|docs| docs.borrow().clone())
-}
-
-#[ic_cdk::update]
-pub fn register_patient(name: String, age: u8, gender: String) -> Result<PatientProfile, String> {
-    patient::register_patient(name, age, gender)
-}
-
-#[ic_cdk::query]
-pub fn get_patient_profile(principal: Principal) -> Option<PatientProfile> {
-    patient::get_patient_profile(principal)
-}
-
-#[ic_cdk::query]
-pub fn get_patient_by_health_id(health_id: String) -> Option<PatientProfile> {
-    patient::get_patient_by_health_id(health_id)
 }
 
 // Export Candid

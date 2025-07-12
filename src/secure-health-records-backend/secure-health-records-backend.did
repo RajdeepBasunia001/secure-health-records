@@ -16,6 +16,7 @@ type HealthRecordMetadata = record {
   file_type: text;
   category: Category;
   uploaded_at: nat64;
+  digital_signature: text;
 };
 type ConsentStatus = variant { Pending; Approved; Denied };
 type ConsentRequest = record {
@@ -51,7 +52,6 @@ type SharedFilePermission = record {
   permission: text;
   duration: nat64;
 };
-
 type AccessLogEntry = record {
   id: nat64;
   record_id: nat64;
@@ -60,7 +60,6 @@ type AccessLogEntry = record {
   access_type: text;
   purpose: opt text;
 };
-
 type ConsentHistoryEntry = record {
   id: nat64;
   consent_id: nat64;
@@ -72,7 +71,6 @@ type ConsentHistoryEntry = record {
   permissions: text;
   status: text;
 };
-
 type DoctorProfile = record {
   user_principal: principal;
   health_id: text;
@@ -82,13 +80,14 @@ type DoctorProfile = record {
   contact: nat64;
   registered_at: nat64;
 };
-
 type PatientProfile = record {
   user_principal: principal;
   health_id: text;
   name: text;
   age: nat8;
   gender: text;
+  email: text;
+  contact: nat64;
   registered_at: nat64;
 };
 
@@ -119,8 +118,9 @@ service : {
   extend_consent: (consent_id: nat64, new_expires_at: nat64) -> (variant { ok: null; err: text });
   register_doctor: (name: text, email: text, speciality: text, contact: nat64) -> (text);
   get_doctor_profile: (user_principal: principal) -> (opt DoctorProfile);
-  register_patient: (name: text, age: nat8, gender: text) -> (variant { ok: PatientProfile; err: text });
+  register_patient: (name: text, age: nat8, gender: text, email: text, contact: nat64) -> (text);
   get_patient_profile: (user_principal: principal) -> (opt PatientProfile);
   get_patient_by_health_id: (health_id: text) -> (opt PatientProfile);
   debug_list_doctors: () -> (vec DoctorProfile) query;
+  debug_list_patients: () -> (vec PatientProfile) query;
 }

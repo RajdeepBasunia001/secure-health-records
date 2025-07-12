@@ -50,10 +50,10 @@ export async function getPatientProfile(principalString) {
 }
 
 // Register a new patient
-export async function registerPatient(name, age, gender) {
+export async function registerPatient(name, age, gender, email, contact) {
   const actor = await getBackendActor();
   console.log('registerPatient called');
-  return actor.register_patient(name, age, gender);
+  return actor.register_patient(name, age, gender, email, contact);
 }
 
 // Fetch patient profile by health ID

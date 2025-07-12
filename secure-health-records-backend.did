@@ -1,0 +1,140 @@
+type AccessLogEntry = record {
+  id : nat64;
+  accessed_at : nat64;
+  accessed_by : principal;
+  record_id : nat64;
+  purpose : opt text;
+  access_type : text;
+};
+type AppointmentRequest = record {
+  id : nat64;
+  status : text;
+  request_type : text;
+  patient : principal;
+  created_at : nat64;
+  provider_health_id : text;
+  shared_files : opt vec SharedFilePermission;
+  details : text;
+  consent_token : opt text;
+};
+type Category = variant {
+  ConsultationNote;
+  Surgery;
+  LabReport;
+  Immunization;
+  General;
+  Allergies;
+  Other;
+  Prescription;
+};
+type ConsentHistoryEntry = record {
+  id : nat64;
+  status : text;
+  patient : principal;
+  permissions : text;
+  consent_id : nat64;
+  revoked_at : opt nat64;
+  grantee : principal;
+  granted_at : nat64;
+  expires_at : opt nat64;
+};
+type ConsentRequest = record {
+  id : nat64;
+  status : ConsentStatus;
+  patient : principal;
+  requester : principal;
+  requested_at : nat64;
+};
+type ConsentStatus = variant { Approved; Denied; Pending };
+type DoctorProfile = record {
+  user_principal : principal;
+  contact : nat64;
+  health_id : text;
+  name : text;
+  speciality : text;
+  email : text;
+  registered_at : nat64;
+};
+type HealthRecordMetadata = record {
+  id : nat64;
+  owner : principal;
+  name : text;
+  file_type : text;
+  category : Category;
+  digital_signature : text;
+  uploaded_at : nat64;
+};
+type Notification = record {
+  id : nat64;
+  read : bool;
+  recipient : principal;
+  created_at : nat64;
+  sender : principal;
+  message : text;
+  notif_type : NotificationType;
+};
+type NotificationType = variant { ConsentRequested; ConsentResponded };
+type PatientProfile = record {
+  age : nat8;
+  user_principal : principal;
+  contact : nat64;
+  health_id : text;
+  name : text;
+  email : text;
+  gender : text;
+  registered_at : nat64;
+};
+type Result = variant { Ok : nat64; Err : text };
+type Result_1 = variant { Ok; Err : text };
+type Result_2 = variant { Ok : text; Err : text };
+type SharedFilePermission = record {
+  permission : text;
+  duration : nat64;
+  file_id : nat64;
+};
+service : {
+  create_appointment_request : (
+      text,
+      text,
+      text,
+      opt text,
+      opt vec SharedFilePermission,
+    ) -> (Result);
+  debug_list_doctors : () -> (vec DoctorProfile) query;
+  debug_list_patients : () -> (vec PatientProfile) query;
+  delete_record : (nat64) -> (Result_1);
+  extend_consent : (nat64, nat64) -> (Result_1);
+  get_access_logs_for_record : (nat64) -> (vec AccessLogEntry) query;
+  get_appointment_requests_for_provider : (text) -> (
+      vec AppointmentRequest,
+    ) query;
+  get_consent_history_for_patient : (principal) -> (
+      vec ConsentHistoryEntry,
+    ) query;
+  get_consent_requests : () -> (vec ConsentRequest) query;
+  get_doctor_profile : (principal) -> (opt DoctorProfile) query;
+  get_notifications : () -> (vec Notification) query;
+  get_patient_by_health_id : (text) -> (opt PatientProfile) query;
+  get_patient_profile : (principal) -> (opt PatientProfile) query;
+  get_record_data : (nat64) -> (opt blob) query;
+  get_records : (principal) -> (vec HealthRecordMetadata) query;
+  log_access_event : (nat64, principal, text, opt text) -> ();
+  log_consent_history : (
+      nat64,
+      principal,
+      principal,
+      nat64,
+      opt nat64,
+      opt nat64,
+      text,
+      text,
+    ) -> ();
+  mark_notification_read : (nat64) -> ();
+  register_doctor : (text, text, text, nat64) -> (text);
+  register_patient : (text, nat8, text, text, nat64) -> (Result_2);
+  rename_record : (nat64, text) -> (Result_1);
+  request_consent : (principal) -> ();
+  respond_consent_request : (nat64, bool) -> ();
+  revoke_consent : (nat64) -> (Result_1);
+  upload_record : (text, text, Category, blob, text) -> ();
+}
