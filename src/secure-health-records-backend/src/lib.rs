@@ -417,7 +417,26 @@ fn create_appointment_request(
     details: String,
     consent_token: Option<String>,
     shared_files: Option<Vec<SharedFilePermission>>
-) -> Result<u64, String> {
+) -> String {
+    // Validation logic
+    match request_type.as_str() {
+        "appointment" => {
+            if consent_token.is_some() || shared_files.is_some() {
+                return "Appointment requests must not include consent_token or shared_files".to_string();
+            }
+        },
+        "consent" => {
+            if consent_token.as_ref().map(|s| s.is_empty()).unwrap_or(true) {
+                return "Consent requests must include a non-empty consent_token".to_string();
+            }
+            if shared_files.as_ref().map(|v| v.is_empty()).unwrap_or(true) {
+                return "Consent requests must include at least one shared file".to_string();
+            }
+        },
+        _ => {
+            return "Invalid request_type. Must be 'appointment' or 'consent'".to_string();
+        }
+    }
     ic_cdk::print(&format!(
         "[DEBUG] create_appointment_request: provider_health_id={}, request_type={}, details={}, consent_token={:?}, shared_files={:?}",
         provider_health_id, request_type, details, consent_token, shared_files
@@ -442,13 +461,28 @@ fn create_appointment_request(
         shared_files,
     };
     APPOINTMENT_REQUESTS.with(|reqs| reqs.borrow_mut().push(req));
-    Ok(id)
+    "ok".to_string()
 }
 
 #[ic_cdk::query]
-fn get_appointment_requests_for_provider(provider_health_id: String) -> Vec<AppointmentRequest> {
+pub fn get_appointments_for_provider(provider_health_id: String) -> Vec<AppointmentRequest> {
     APPOINTMENT_REQUESTS.with(|reqs| {
-        reqs.borrow().iter().filter(|r| r.provider_health_id == provider_health_id).cloned().collect()
+        reqs.borrow()
+            .iter()
+            .filter(|r| r.provider_health_id == provider_health_id && r.request_type == "appointment")
+            .cloned()
+            .collect()
+    })
+}
+
+#[ic_cdk::query]
+pub fn get_consent_requests_for_provider(provider_health_id: String) -> Vec<AppointmentRequest> {
+    APPOINTMENT_REQUESTS.with(|reqs| {
+        reqs.borrow()
+            .iter()
+            .filter(|r| r.provider_health_id == provider_health_id && r.request_type == "consent")
+            .cloned()
+            .collect()
     })
 }
 
@@ -559,9 +593,16 @@ fn extend_consent(consent_id: u64, new_expires_at: u64) -> Result<(), String> {
 
 #[ic_cdk::update]
 fn register_doctor(name: String, email: String, speciality: String, contact: u64) -> String {
+    let id = NEXT_DOCTOR_ID.with(|n| {
+        let mut n = n.borrow_mut();
+        let id = *n;
+        *n += 1;
+        id
+    });
+    let health_id = format!("DOC-{:06}", id);
     let profile = DoctorProfile {
         user_principal: ic_cdk::caller(),
-        health_id: format!("HID-{}", ic_cdk::caller()),
+        health_id: health_id.clone(),
         name,
         email,
         speciality,
@@ -569,7 +610,7 @@ fn register_doctor(name: String, email: String, speciality: String, contact: u64
         registered_at: ic_cdk::api::time(),
     };
     DOCTORS.with(|docs| docs.borrow_mut().push(profile));
-    "ok".to_string()
+    health_id
 }
 
 #[ic_cdk::query]
@@ -578,8 +619,120 @@ fn get_doctor_profile(principal: Principal) -> Option<DoctorProfile> {
 }
 
 #[ic_cdk::query]
+fn get_doctor_by_health_id(health_id: String) -> Option<DoctorProfile> {
+    DOCTORS.with(|docs| docs.borrow().iter().find(|d| d.health_id == health_id).cloned())
+}
+
+#[ic_cdk::query]
 fn debug_list_doctors() -> Vec<DoctorProfile> {
     DOCTORS.with(|docs| docs.borrow().clone())
+}
+
+#[ic_cdk::update]
+pub fn respond_appointment_request(request_id: u64, approve: bool) -> Result<(), String> {
+    let caller = ic_cdk::caller();
+    let mut doctor_health_id = None;
+    // Find the doctor's health_id
+    DOCTORS.with(|docs| {
+        if let Some(doc) = docs.borrow().iter().find(|d| d.user_principal == caller) {
+            doctor_health_id = Some(doc.health_id.clone());
+        }
+    });
+    let doctor_health_id = match doctor_health_id {
+        Some(id) => id,
+        None => return Err("Doctor profile not found".to_string()),
+    };
+    let mut patient_principal = None;
+    let mut updated = false;
+    APPOINTMENT_REQUESTS.with(|reqs| {
+        let mut reqs = reqs.borrow_mut();
+        if let Some(req) = reqs.iter_mut().find(|r| r.id == request_id && r.provider_health_id == doctor_health_id) {
+            if req.status != "pending" {
+                return;
+            }
+            req.status = if approve { "approved".to_string() } else { "denied".to_string() };
+            patient_principal = Some(req.patient);
+            updated = true;
+        }
+    });
+    if !updated {
+        return Err("Appointment request not found or already processed".to_string());
+    }
+    // Optionally, send notification to patient
+    if let Some(patient) = patient_principal {
+        let now = time();
+        let notif_id = NEXT_NOTIFICATION_ID.with(|n| {
+            let mut n = n.borrow_mut();
+            let id = *n;
+            *n += 1;
+            id
+        });
+        let notif = Notification {
+            id: notif_id,
+            recipient: patient,
+            sender: caller,
+            notif_type: NotificationType::ConsentResponded, // Reuse for appointment
+            message: if approve {
+                "Your appointment request was approved.".to_string()
+            } else {
+                "Your appointment request was denied.".to_string()
+            },
+            created_at: now,
+            read: false,
+        };
+        NOTIFICATIONS.with(|n| n.borrow_mut().push(notif));
+    }
+    Ok(())
+}
+
+#[derive(CandidType, Deserialize, Serialize, Clone, Debug)]
+pub struct SharedFilePermissionFrontend {
+    pub permission: String, // "view" or "edit"
+    pub duration: u64,      // seconds or timestamp
+    pub file_id: u64,
+}
+
+#[ic_cdk::update]
+pub fn create_consent_request(
+    provider_health_id: String,
+    details: String,
+    consent_token: String,
+    shared_files: Vec<SharedFilePermissionFrontend>,
+) -> String {
+    // Validation
+    if consent_token.is_empty() {
+        return "Consent requests must include a non-empty consent_token".to_string();
+    }
+    if shared_files.is_empty() {
+        return "Consent requests must include at least one shared file".to_string();
+    }
+    let patient = ic_cdk::caller();
+    let now = time();
+    let id = NEXT_APPOINTMENT_REQUEST_ID.with(|n| {
+        let mut n = n.borrow_mut();
+        let id = *n;
+        *n += 1;
+        id
+    });
+    // Map frontend struct to backend struct
+    let backend_files: Vec<SharedFilePermission> = shared_files.into_iter().map(|f| SharedFilePermission {
+        file_id: f.file_id,
+        permission: f.permission,
+        duration: f.duration,
+    }).collect();
+    let req = AppointmentRequest {
+        id,
+        patient,
+        provider_health_id,
+        request_type: "consent".to_string(),
+        details,
+        status: "pending".to_string(),
+        created_at: now,
+        consent_token: Some(consent_token),
+        shared_files: Some(backend_files),
+    };
+    APPOINTMENT_REQUESTS.with(|reqs| reqs.borrow_mut().push(req));
+    "ok".to_string()
 }
 
 // Export Candid

@@ -108,8 +108,9 @@ service : {
     details: text,
     consent_token: opt text,
     shared_files: opt vec SharedFilePermission
-  ) -> (variant { ok: nat64; err: text });
-  get_appointment_requests_for_provider: (provider_health_id: text) -> (vec AppointmentRequest);
+  ) -> (text);
+  get_appointments_for_provider: (provider_health_id: text) -> (vec AppointmentRequest);
+  get_consent_requests_for_provider: (provider_health_id: text) -> (vec AppointmentRequest);
   log_access_event: (record_id: nat64, accessed_by: principal, access_type: text, purpose: opt text) -> ();
   get_access_logs_for_record: (record_id: nat64) -> (vec AccessLogEntry);
   log_consent_history: (consent_id: nat64, patient: principal, grantee: principal, granted_at: nat64, revoked_at: opt nat64, expires_at: opt nat64, permissions: text, status: text) -> ();
@@ -121,6 +122,14 @@ service : {
   register_patient: (name: text, age: nat8, gender: text, email: text, contact: nat64) -> (text);
   get_patient_profile: (user_principal: principal) -> (opt PatientProfile);
   get_patient_by_health_id: (health_id: text) -> (opt PatientProfile);
+  get_doctor_by_health_id: (health_id: text) -> (opt DoctorProfile);
   debug_list_doctors: () -> (vec DoctorProfile) query;
   debug_list_patients: () -> (vec PatientProfile) query;
+  respond_appointment_request: (request_id: nat64, approve: bool) -> (variant { ok: null; err: text });
+  create_consent_request: (
+    provider_health_id: text,
+    details: text,
+    consent_token: text,
+    shared_files: vec record { permission: text; duration: nat64; file_id: nat64; }
+  ) -> (text);
 }

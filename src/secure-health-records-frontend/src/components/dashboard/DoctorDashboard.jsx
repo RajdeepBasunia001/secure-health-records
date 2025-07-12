@@ -95,8 +95,8 @@ const DoctorDashboard = () => {
       }
       // Proceed with registration if email is unique
       const result = await registerDoctor(regName, regEmail, regSpeciality, Number(regContact));
-      if (result === 'ok' || result === "Doctor registered successfully") {
-        alert('Doctor registered successfully');
+      if (result && result.startsWith('DOC-')) {
+        alert('Doctor registered! Your Health ID: ' + result);
         // Fetch the profile after successful registration
         const prof = await getDoctorProfile(principal);
         let profileObj = prof;
@@ -106,7 +106,7 @@ const DoctorDashboard = () => {
         setProfile(normalizeDoctorProfile(profileObj));
         navigate('/dashboard/doctor/profile');
       } else {
-        setRegError('Registration failed.');
+        setRegError(result || 'Registration failed.');
       }
     } catch (e) {
       setRegError('Registration failed.');

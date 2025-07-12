@@ -26,8 +26,12 @@ export async function extendConsent(consentId, newExpiresAt) {
   return actor.extend_consent(consentId, newExpiresAt);
 }
 
-// Fetch doctor profile by principal string
+// Fetch doctor profile by principal string (NOT health ID)
 export async function getDoctorProfile(principalString) {
+  // Warn if a health ID is passed instead of a principal
+  if (typeof principalString === 'string' && principalString.startsWith('DOC-')) {
+    console.warn('[getDoctorProfile] Called with a health ID. Use getDoctorByHealthId instead!');
+  }
   console.log('getDoctorProfile called with principal:', principalString);
   const actor = await getBackendActor();
   const principal = Principal.fromText(principalString);
@@ -66,4 +70,28 @@ export async function getPatientByHealthId(healthId) {
 export async function fetchAllDoctors() {
   const actor = await getBackendActor();
   return actor.debug_list_doctors();
+}
+
+// Fetch doctor profile by health ID
+export async function getDoctorByHealthId(healthId) {
+  const actor = await getBackendActor();
+  return actor.get_doctor_by_health_id(healthId);
+}
+
+// Create a consent request (uses new backend method with frontend field order)
+export async function createConsentRequest(providerHealthId, details, consentToken, sharedFiles) {
+  const actor = await getBackendActor();
+  return actor.create_consent_request(providerHealthId, details, consentToken, sharedFiles);
+}
+
+// Fetch only appointment requests for a doctor
+export async function getAppointmentsForProvider(healthId) {
+  const actor = await getBackendActor();
+  return actor.get_appointments_for_provider(healthId);
+}
+
+// Fetch only consent requests for a doctor
+export async function getConsentRequestsForProvider(healthId) {
+  const actor = await getBackendActor();
+  return actor.get_consent_requests_for_provider(healthId);
 } 

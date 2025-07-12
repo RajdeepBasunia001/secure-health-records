@@ -5,7 +5,7 @@ import { getBackendActor } from '../../dfinity';
 import { usePatientRecords } from '../healthRecords/usePatientRecords';
 import SHA256 from 'crypto-js/sha256';
 import { AuthClient } from '@dfinity/auth-client';
-import { fetchAllDoctors } from '../../canisterApi';
+import { fetchAllDoctors, createConsentRequest } from '../../canisterApi';
 
 // Mock file data
 const mockFiles = [
@@ -54,8 +54,8 @@ async function sendShareRequest({ doctorHealthId, requestType, requestDetails, c
     doctorHealthId,
     requestType,
     requestDetails,
-    requestType === 'consent' ? [consentToken] : [],
-    requestType === 'consent' ? [sharedFiles] : []
+    requestType === 'consent' && consentToken ? [consentToken] : [],
+    requestType === 'consent' && sharedFiles && sharedFiles.length > 0 ? sharedFiles : []
   );
 }
 
@@ -154,7 +154,7 @@ const ShareRecords = () => {
           }
         }
         // Gather data for token
-        const doctorHealthId = modalDoctor.healthId;
+        const doctorHealthId = modalDoctor.health_id;
         const files = selectedFiles.map(fileId => ({
           fileId,
           ...fileSettings[fileId],
@@ -183,22 +183,39 @@ const ShareRecords = () => {
           console.log('typeof duration:', typeof sharedFiles[0].duration);
         }
       }
-      // Modularized backend call
-      const result = await sendShareRequest({
-        doctorHealthId: modalDoctor.healthId,
-        requestType,
-        requestDetails,
-        consentToken,
-        sharedFiles,
-      });
-      if (result && result.err) {
-        setSubmitStatus('Error: ' + result.err);
+      // For consent, ensure sharedFiles field order matches Candid: file_id, permission, duration
+      let sharedFilesOrdered = sharedFiles;
+      if (requestType === 'consent' && sharedFiles && sharedFiles.length > 0) {
+        sharedFilesOrdered = sharedFiles.map(f => ({
+          permission: f.permission,
+          duration: f.duration,
+          file_id: f.file_id,
+        }));
+      }
+      let result;
+      if (requestType === 'consent') {
+        result = await createConsentRequest(
+          modalDoctor.health_id,
+          requestDetails,
+          consentToken,
+          sharedFilesOrdered
+        );
       } else {
+        result = await sendShareRequest({
+          doctorHealthId: modalDoctor.health_id,
+          requestType,
+          requestDetails,
+          consentToken,
+          sharedFiles: sharedFilesOrdered,
+        });
+      }
+      if (result === 'ok') {
         setSubmitStatus('Request sent successfully!');
-        // Optional: Auto-close modal after success
         setTimeout(() => {
           closeModal();
         }, 1500);
+      } else {
+        setSubmitStatus('Error: ' + result);
       }
     } catch (err) {
       setSubmitStatus('Error: ' + (err.message || 'Could not send request.'));
@@ -316,7 +333,7 @@ const ShareRecords = () => {
                   <tr key={idx}>
                     <td>{d.name}</td>
                     <td>{d.specialty}</td>
-                    <td>{d.healthId}</td>
+                    <td>{d.health_id}</td>
                     <td>{d.contact}</td>
                     <td>
                       <button
