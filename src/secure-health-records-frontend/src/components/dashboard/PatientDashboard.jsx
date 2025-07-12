@@ -4,6 +4,7 @@ import './PatientDashboard.css';
 import Notifications from '../dashboard/Notifications';
 import Footer from '../common/Footer';
 import { getPatientProfile, registerPatient } from '../../canisterApi';
+import { getBackendActor } from '../../dfinity';
 import { AuthClient } from '@dfinity/auth-client';
 
 const PatientDashboard = () => {
@@ -89,6 +90,15 @@ const PatientDashboard = () => {
       return;
     }
     try {
+      // Check for duplicate email
+      const actor = await getBackendActor();
+      const allPatients = await actor.debug_list_patients();
+      const emailExists = allPatients.some(p => p.email === regEmail);
+      if (emailExists) {
+        setRegError('A patient with this email is already registered.');
+        setRegLoading(false);
+        return;
+      }
       const result = await registerPatient(regName, age, regGender, regEmail, contact);
       console.log('Raw registration result:', JSON.stringify(result, null, 2));
 
