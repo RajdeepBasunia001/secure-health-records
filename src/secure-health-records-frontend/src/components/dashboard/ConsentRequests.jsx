@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import './ConsentRequests.css';
-import { getAppointmentsForProvider, getConsentRequestsForProvider } from '../../canisterApi';
+import { getAppointmentsForProvider, getConsentRequestsForProvider, getPatientByHealthId } from '../../canisterApi';
 import { AuthClient } from '@dfinity/auth-client';
 import { Principal } from '@dfinity/principal';
 import { useNavigate } from 'react-router-dom';
@@ -18,8 +18,51 @@ const ConsentRequests = () => {
   const [downloadingId, setDownloadingId] = useState(null);
   const [previewModal, setPreviewModal] = useState({ open: false, url: '', type: '', name: '' });
   const navigate = useNavigate();
+  const [patientRecords, setPatientRecords] = useState({}); // { principal: [records] }
+  const [doctorPrincipal, setDoctorPrincipal] = useState('');
 
   const { records: allRecords, loading: recordsLoading } = usePatientRecords();
+
+  // Helper to fetch and cache patient records by principal
+  const fetchPatientRecords = async (principal, healthId) => {
+    if (patientRecords[principal]) return patientRecords[principal];
+    try {
+      let patientPrincipal = principal;
+      // If principal is not a string, try to convert
+      if (typeof principal !== 'string' && principal.toText) patientPrincipal = principal.toText();
+      // If principal is not valid, try to get from healthId
+      if ((!patientPrincipal || patientPrincipal === '[object Object]') && healthId) {
+        const profile = await getPatientByHealthId(healthId);
+        if (profile && profile.user_principal) patientPrincipal = profile.user_principal;
+        else if (profile && profile.ok && profile.ok.user_principal) patientPrincipal = profile.ok.user_principal;
+      }
+      if (!patientPrincipal) return [];
+      const actor = await getBackendActor();
+      const records = await actor.get_records(typeof patientPrincipal === 'string' ? Principal.fromText(patientPrincipal) : patientPrincipal);
+      setPatientRecords(prev => ({ ...prev, [patientPrincipal]: records }));
+      return records;
+    } catch (e) {
+      return [];
+    }
+  };
+
+  // Effect: Whenever consents change, fetch missing patient records
+  useEffect(() => {
+    const fetchAllMissingRecords = async () => {
+      const uniquePatients = Array.from(new Set(
+        consents.map(req => req.patient && req.patient.toText ? req.patient.toText() : (typeof req.patient === 'string' ? req.patient : ''))
+      ));
+      for (const patientPrincipal of uniquePatients) {
+        if (patientPrincipal && !patientRecords[patientPrincipal]) {
+          await fetchPatientRecords(patientPrincipal);
+        }
+      }
+    };
+    if (consents.length > 0) {
+      fetchAllMissingRecords();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [consents]);
 
   useEffect(() => {
     if (notRegistered) {
@@ -74,6 +117,12 @@ const ConsentRequests = () => {
       }
     };
     fetchRequests();
+  }, []);
+
+  useEffect(() => {
+    AuthClient.create().then(authClient => {
+      setDoctorPrincipal(authClient.getIdentity().getPrincipal().toText());
+    });
   }, []);
 
   // Approve/Deny handlers
@@ -146,6 +195,22 @@ const ConsentRequests = () => {
     setDownloadingId(null);
   };
 
+  // Helper to get file name with extension
+  const getFileNameWithExtension = (rec) => {
+    if (!rec) return undefined;
+    // If name already has an extension, return as is
+    if (rec.name && /\.[a-zA-Z0-9]+$/.test(rec.name)) return rec.name;
+    // Otherwise, try to append extension from file_type
+    if (rec.file_type) {
+      let ext = '';
+      if (rec.file_type === 'application/pdf') ext = 'pdf';
+      else if (rec.file_type.startsWith('image/')) ext = rec.file_type.split('/').pop();
+      else ext = rec.file_type.split('/').pop();
+      return rec.name ? `${rec.name}.${ext}` : `record-${rec.id}.${ext}`;
+    }
+    return rec.name || `record-${rec.id}`;
+  };
+
   if (loading) return <div className="modern-loading"><span className="modern-spinner"></span> Loading patient requests...</div>;
   if (notRegistered) return <div className="upload-error">No doctor profile found. Redirecting to registration...</div>;
   if (error) return <div className="upload-error">{error}</div>;
@@ -191,69 +256,94 @@ const ConsentRequests = () => {
           <div className="modern-empty">No consent requests.</div>
         ) : (
           <ul className="modern-list">
-            {consents.map((req, idx) => (
-              <li key={req.id} className={`consent-request-item modern-card animate-fade-in`} style={{animationDelay: `${idx * 80}ms`}}>
-                <div className="modern-row"><span className="modern-label">Patient:</span> <span className="modern-value">{typeof req.patient === 'object' && req.patient.toText ? req.patient.toText() : (typeof req.patient === 'string' ? req.patient : JSON.stringify(req.patient))}</span></div>
-                <div className="modern-row"><span className="modern-label">Details:</span> <span className="modern-value">{req.details}</span></div>
-                <div className={`modern-row modern-status status-${req.status?.toLowerCase()}`}>Status: <span>{req.status}</span></div>
-                {Array.isArray(req.shared_files) && req.shared_files.length > 0 && (
-                  <div className="modern-row" style={{marginTop: '0.5rem', flexDirection: 'column', alignItems: 'flex-start'}}>
-                    <span className="modern-label" style={{marginBottom: '0.2rem'}}>Attached Records:</span>
-                    <ul className="modern-list" style={{gap: '0.3rem', marginLeft: '1.2rem', marginTop: 0}}>
-                      {req.shared_files.map((file, i) => {
-                        const rec = allRecords.find(r => Number(r.id) === Number(file.file_id));
-                        return (
-                          <li key={file.file_id + '-' + i} style={{background: '#f3f4f6', borderRadius: 6, padding: '0.3rem 0.7rem', fontSize: '0.97em', color: '#333', display: 'flex', alignItems: 'center', gap: '0.7rem'}}>
-                            <span style={{fontWeight: 500}}>{rec ? rec.name : (file.file_id ? `Record #${file.file_id}` : 'Unknown Record')}</span>
-                            {rec && <span style={{color: '#7c3aed', marginLeft: 4}}>[{rec.category}]</span>}
-                            <span style={{marginLeft: 8, color: '#5b21b6'}}>Permission: {file.permission}</span>
-                            {file.duration ? <span style={{marginLeft: 8, color: '#a1a1aa'}}>Duration: {new Date(Number(file.duration)).toLocaleString()}</span> : null}
-                            {file.file_id && (
-                              <>
-                                {(rec && (rec.file_type?.startsWith('image/') || rec.file_type === 'application/pdf')) && (
+            {consents.map((req, idx) => {
+              // Normalize shared_files to always be a flat array or []
+              const sharedFiles = Array.isArray(req.shared_files)
+                ? (Array.isArray(req.shared_files[0]) ? req.shared_files[0] : req.shared_files)
+                : [];
+              const patientPrincipal = req.patient && req.patient.toText ? req.patient.toText() : (typeof req.patient === 'string' ? req.patient : '');
+              const records = patientRecords[patientPrincipal] || [];
+              // Debug log for patient records and principals
+              console.log('ConsentRequest patient:', patientPrincipal, 'Records:', records, 'Doctor principal:', doctorPrincipal, 'Expected requester:', req.requester && req.requester.toText ? req.requester.toText() : req.requester);
+              // Show warning if no records due to access
+              const noAccess = sharedFiles.length > 0 && records.length === 0;
+              return (
+                <li key={req.id} className={`consent-request-item modern-card animate-fade-in`} style={{animationDelay: `${idx * 80}ms`}}>
+                  <div className="modern-row"><span className="modern-label">Patient:</span> <span className="modern-value">{patientPrincipal}</span></div>
+                  <div className="modern-row"><span className="modern-label">Details:</span> <span className="modern-value">{req.details}</span></div>
+                  <div className={`modern-row modern-status status-${req.status?.toLowerCase()}`}>Status: <span>{req.status}</span></div>
+                  {sharedFiles.length > 0 && (
+                    <div className="modern-row" style={{marginTop: '0.5rem', flexDirection: 'column', alignItems: 'flex-start'}}>
+                      <span className="modern-label" style={{marginBottom: '0.2rem'}}>Attached Records:</span>
+                      <ul className="modern-list" style={{gap: '0.3rem', marginLeft: '1.2rem', marginTop: 0}}>
+                        {sharedFiles.map((file, i) => {
+                          const rec = records.find(r => Number(r.id) === Number(file.file_id));
+                          return (
+                            <li key={file.file_id + '-' + i} style={{background: '#f3f4f6', borderRadius: 6, padding: '0.3rem 0.7rem', fontSize: '0.97em', color: '#333', display: 'flex', alignItems: 'center', gap: '0.7rem'}}>
+                              <span style={{fontWeight: 500}}>{rec ? rec.name : (file.file_id ? `Record #${file.file_id}` : 'Unknown Record')}</span>
+                              {rec && <span style={{color: '#7c3aed', marginLeft: 4}}>[{rec.category}]</span>}
+                              <span style={{marginLeft: 8, color: '#5b21b6'}}>Permission: {file.permission}</span>
+                              {file.duration ? <span style={{marginLeft: 8, color: '#a1a1aa'}}>Duration: {new Date(Number(file.duration)).toLocaleString()}</span> : null}
+                              {file.file_id && (
+                                <>
+                                  {(rec && (rec.file_type?.startsWith('image/') || rec.file_type === 'application/pdf')) && (
+                                    <button
+                                      className="modern-btn"
+                                      style={{marginLeft: 8, padding: '0.2rem 0.8rem', fontSize: '0.95em'}}
+                                      disabled={downloadingId === file.file_id}
+                                      onClick={() => handlePreviewRecord(
+                                        Number(file.file_id),
+                                        getFileNameWithExtension(rec),
+                                        rec ? rec.file_type : undefined
+                                      )}
+                                    >
+                                      {downloadingId === file.file_id ? <span className="modern-spinner" style={{width:16,height:16}}></span> : 'Preview'}
+                                    </button>
+                                  )}
                                   <button
-                                    className="modern-btn"
+                                    className="modern-btn modern-btn-outline"
                                     style={{marginLeft: 8, padding: '0.2rem 0.8rem', fontSize: '0.95em'}}
                                     disabled={downloadingId === file.file_id}
-                                    onClick={() => handlePreviewRecord(Number(file.file_id), rec ? rec.name : undefined, rec ? rec.file_type : undefined)}
+                                    onClick={() => handleDownloadRecord(
+                                      Number(file.file_id),
+                                      getFileNameWithExtension(rec),
+                                      rec ? rec.file_type : undefined
+                                    )}
                                   >
-                                    {downloadingId === file.file_id ? <span className="modern-spinner" style={{width:16,height:16}}></span> : 'Preview'}
+                                    {downloadingId === file.file_id ? <span className="modern-spinner" style={{width:16,height:16}}></span> : 'Download'}
                                   </button>
-                                )}
-                                <button
-                                  className="modern-btn modern-btn-outline"
-                                  style={{marginLeft: 8, padding: '0.2rem 0.8rem', fontSize: '0.95em'}}
-                                  disabled={downloadingId === file.file_id}
-                                  onClick={() => handleDownloadRecord(Number(file.file_id), rec ? rec.name : undefined, rec ? rec.file_type : undefined)}
-                                >
-                                  {downloadingId === file.file_id ? <span className="modern-spinner" style={{width:16,height:16}}></span> : 'Download'}
-                                </button>
-                              </>
-                            )}
-                          </li>
-                        );
-                      })}
-                    </ul>
+                                </>
+                              )}
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    </div>
+                  )}
+                  {noAccess && (
+                    <div style={{color: '#dc2626', marginTop: 8, fontWeight: 500}}>
+                      You do not have access to this patient's records. Make sure you are logged in with the correct Internet Identity.
+                    </div>
+                  )}
+                  <div className="modern-row" style={{marginTop: '0.7rem', gap: '1rem'}}>
+                    <button
+                      className="modern-btn"
+                      disabled={actionLoading === req.id + '-approve' || req.status === 'approved'}
+                      onClick={() => handleApprove(req.id)}
+                    >
+                      {actionLoading === req.id + '-approve' ? <span className="modern-spinner" style={{width:18,height:18}}></span> : 'Approve'}
+                    </button>
+                    <button
+                      className="modern-btn modern-btn-outline"
+                      disabled={actionLoading === req.id + '-deny' || req.status === 'denied'}
+                      onClick={() => handleDeny(req.id)}
+                    >
+                      {actionLoading === req.id + '-deny' ? <span className="modern-spinner" style={{width:18,height:18}}></span> : 'Deny'}
+                    </button>
                   </div>
-                )}
-                <div className="modern-row" style={{marginTop: '0.7rem', gap: '1rem'}}>
-                  <button
-                    className="modern-btn"
-                    disabled={actionLoading === req.id + '-approve' || req.status === 'approved'}
-                    onClick={() => handleApprove(req.id)}
-                  >
-                    {actionLoading === req.id + '-approve' ? <span className="modern-spinner" style={{width:18,height:18}}></span> : 'Approve'}
-                  </button>
-                  <button
-                    className="modern-btn modern-btn-outline"
-                    disabled={actionLoading === req.id + '-deny' || req.status === 'denied'}
-                    onClick={() => handleDeny(req.id)}
-                  >
-                    {actionLoading === req.id + '-deny' ? <span className="modern-spinner" style={{width:18,height:18}}></span> : 'Deny'}
-                  </button>
-                </div>
-              </li>
-            ))}
+                </li>
+              );
+            })}
           </ul>
         )}
       </div>

@@ -99,6 +99,7 @@ const UploadNotes = () => {
     setUploading(true);
     setError('');
     try {
+      console.log('Uploading file:', file.name, 'Type:', file.type);
       const arrayBuffer = await file.arrayBuffer();
       const uint8Array = Array.from(new Uint8Array(arrayBuffer));
       const actor = await getBackendActor();

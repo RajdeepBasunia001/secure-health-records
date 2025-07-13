@@ -83,6 +83,7 @@ pub struct SharedFilePermission {
 pub struct AppointmentRequest {
     id: u64,
     patient: Principal,
+    requester: Principal,
     provider_health_id: String,
     request_type: String, // "appointment" or "consent"
     details: String,      // Reason, date/time, or consent details
@@ -452,6 +453,7 @@ fn create_appointment_request(
     let req = AppointmentRequest {
         id,
         patient,
+        requester: ic_cdk::caller(),
         provider_health_id,
         request_type,
         details,
@@ -723,6 +725,7 @@ pub fn create_consent_request(
     let req = AppointmentRequest {
         id,
         patient,
+        requester: ic_cdk::caller(),
         provider_health_id,
         request_type: "consent".to_string(),
         details,

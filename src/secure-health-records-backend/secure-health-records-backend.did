@@ -39,6 +39,7 @@ type Notification = record {
 type AppointmentRequest = record {
   id: nat64;
   patient: principal;
+  requester: principal;
   provider_health_id: text;
   request_type: text;
   details: text;
