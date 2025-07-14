@@ -10,12 +10,6 @@
 # dfx temporary files
 .dfx/
 
-# taskmaster temporary files
-.taskmaster/
-
-# cursor temporary files
-.cursor/    
-
 # generated files
 **/declarations/
 
