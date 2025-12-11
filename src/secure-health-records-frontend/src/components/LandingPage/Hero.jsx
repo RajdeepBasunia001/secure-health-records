@@ -27,14 +27,14 @@ const Hero = () => {
 
           <div class="tagline-wrapper">
             <p class="tagline-main">
-            <span class="quote quote-left">“</span>
-              <span class="highlight">Your health data</span>, 
-              <span class="keyword">your control</span>, 
+              <span class="quote quote-left">“</span>
+              <span class="highlight">Your health data</span>,
+              <span class="keyword">your control</span>,
               your future.
-            <span class="quote quote-right">”</span>
+              <span class="quote quote-right">”</span>
             </p>
             <p class="tagline-sub">
-              ⟶ <span class="built">Built on blockchain</span>. 
+              ⟶ <span class="built">Built on blockchain</span>.
               <span class="trusted">Trusted by patients.</span>
             </p>
           </div>

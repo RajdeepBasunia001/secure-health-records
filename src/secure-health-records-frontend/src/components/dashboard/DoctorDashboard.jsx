@@ -1,13 +1,15 @@
 import React, { useEffect, useState } from 'react';
-import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import './DoctorDashboard.css';
-import Footer from '../common/Footer';
-import { getDoctorProfile, registerDoctor, fetchAllDoctors } from '../../canisterApi';
+import { Routes, Route, useNavigate } from 'react-router-dom';
 import { AuthClient } from '@dfinity/auth-client';
+import { getDoctorProfile } from '../../canisterApi';
+import DashboardLayout from '../layout/DashboardLayout';
+import DoctorRegistration from '../auth/DoctorRegistration';
+import DoctorRequests from './doctor/DoctorRequests';
+import DoctorOverview from './doctor/DoctorOverview';
+import DoctorPatientLookup from './doctor/DoctorPatientLookup';
 
 function normalizeDoctorProfile(profileObj) {
   if (!profileObj) return profileObj;
-  // Map all expected fields to snake_case
   return {
     health_id: profileObj.health_id || profileObj.healthId || '',
     name: profileObj.name || '',
@@ -19,213 +21,76 @@ function normalizeDoctorProfile(profileObj) {
   };
 }
 
-const TABS = [
-  { key: 'profile', label: 'Profile', icon: '👤', path: '/dashboard/doctor/profile' },
-  { key: 'requests', label: 'Patient Requests', icon: '📥', path: '/dashboard/doctor/requests' },
-  { key: 'lookup', label: 'Patient Lookup', icon: '🔍', path: '/dashboard/doctor/lookup' },
-  { key: 'upload-notes', label: 'Upload Notes/Prescriptions', icon: '📝', path: '/dashboard/doctor/upload-notes' },
-];
-
 const DoctorDashboard = () => {
-  const location = useLocation();
   const navigate = useNavigate();
-  // --- AUTH GUARD START ---
-  useEffect(() => {
-    const principal = localStorage.getItem('principal');
-    const role = localStorage.getItem('role');
-    if (!principal || role !== 'doctor') {
-      navigate('/login?role=doctor', { replace: true });
-    }
-  }, [navigate]);
-  // --- AUTH GUARD END ---
-  const [principal, setPrincipal] = useState(null);
-
-  // Doctor profile state
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [regName, setRegName] = useState('');
-  const [regEmail, setRegEmail] = useState('');
-  const [regSpeciality, setRegSpeciality] = useState('');
-  const [regContact, setRegContact] = useState('');
-  const [regError, setRegError] = useState('');
-  const [regLoading, setRegLoading] = useState(false);
+  const [principal, setPrincipal] = useState(null);
 
   useEffect(() => {
-    AuthClient.create().then(authClient => {
+    async function initAuth() {
+      const authClient = await AuthClient.create();
+      if (!authClient.isAuthenticated()) {
+        navigate('/login?role=doctor');
+        return;
+      }
       const p = authClient.getIdentity().getPrincipal().toText();
       setPrincipal(p);
-    });
-  }, []);
 
-  useEffect(() => {
-    async function fetchProfile() {
-      setLoading(true);
-      setRegError('');
       try {
-        if (!principal) return setProfile(null);
-        const prof = await getDoctorProfile(principal);
-        let profileObj = prof;
-        // Accept both array and {ok: array} shapes, and extract first element if array
-        if (Array.isArray(prof) && prof[0]) profileObj = prof[0];
-        else if (prof && prof.ok && Array.isArray(prof.ok) && prof.ok[0]) profileObj = prof.ok[0];
-        else if (prof && prof.ok) profileObj = prof.ok;
-        setProfile(normalizeDoctorProfile(profileObj));
+        const result = await getDoctorProfile(p);
+        let profileObj = result;
+        if (Array.isArray(result) && result[0]) profileObj = result[0];
+        else if (result && result.ok && Array.isArray(result.ok) && result.ok[0]) profileObj = result.ok[0];
+        else if (result && result.ok) profileObj = result.ok;
+
+        if (profileObj) {
+          setProfile(normalizeDoctorProfile(profileObj));
+        } else {
+          setProfile(null);
+        }
       } catch (e) {
-        setProfile(null);
+        console.error("Profile fetch error", e);
       } finally {
         setLoading(false);
       }
     }
-    fetchProfile();
-  }, [principal]);
+    initAuth();
+  }, [navigate]);
 
-  const handleRegister = async (e) => {
-    e.preventDefault();
-    setRegLoading(true);
-    setRegError('');
-    try {
-      // Fetch all doctors
-      const doctors = await fetchAllDoctors();
-      // Check for duplicate email
-      const emailExists = doctors.some(doc => doc.email === regEmail);
-      if (emailExists) {
-        setRegError('A doctor with this email is already registered.');
-        setRegLoading(false);
-        return;
-      }
-      // Proceed with registration if email is unique
-      const result = await registerDoctor(regName, regEmail, regSpeciality, Number(regContact));
-      if (result && result.startsWith('DOC-')) {
-        alert('Doctor registered! Your Health ID: ' + result);
-        // Fetch the profile after successful registration
-        const prof = await getDoctorProfile(principal);
-        let profileObj = prof;
-        if (Array.isArray(prof) && prof[0]) profileObj = prof[0];
-        else if (prof && prof.ok && Array.isArray(prof.ok) && prof.ok[0]) profileObj = prof.ok[0];
-        else if (prof && prof.ok) profileObj = prof.ok;
-        setProfile(normalizeDoctorProfile(profileObj));
-        navigate('/dashboard/doctor/profile');
-      } else {
-        setRegError(result || 'Registration failed.');
-      }
-    } catch (e) {
-      setRegError('Registration failed.');
-    }
-    setRegLoading(false);
+  const handleLogout = async () => {
+    const authClient = await AuthClient.create();
+    await authClient.logout();
+    localStorage.clear();
+    navigate('/');
   };
 
-  const handleLogout = () => {
-    if (window.confirm('Are you sure you want to logout?')) {
-      localStorage.clear();
-      navigate('/');
-    }
+  const handleRegistrationSuccess = () => {
+    window.location.reload();
   };
 
-  // Registration UI
-  if (!loading && (!profile || !profile.health_id || !profile.name)) {
+  if (loading) {
     return (
-      <div className="doctor-dashboard-layout">
-        <header className="doctor-dashboard-header enhanced-header">
-          <div className="header-left">
-            <span className="dashboard-logo">🩺</span>
-            <div>
-              <h2>Doctor Dashboard</h2>
-              <div className="dashboard-subtitle">Register as a doctor to continue</div>
-            </div>
-          </div>
-          <button className="logout-btn" onClick={handleLogout}>Logout</button>
-        </header>
-        <main className="doctor-dashboard-content enhanced-content" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 400 }}>
-          <form className="doctor-register-card" onSubmit={handleRegister} style={{ background: '#fff', borderRadius: 12, boxShadow: '0 2px 16px #4b3ca71a', padding: '2.5rem 2.5rem 2rem 2.5rem', minWidth: 340 }}>
-            <h3 style={{ marginBottom: 18 }}>Doctor Registration</h3>
-            <label htmlFor="doctor-name">Your Name</label>
-            <input id="doctor-name" type="text" value={regName} onChange={e => setRegName(e.target.value)} required style={{ width: '100%', margin: '0.5rem 0 1.2rem 0', padding: '0.6rem', borderRadius: 6, border: '1px solid #ccc', fontSize: '1rem' }} />
-            <label htmlFor="doctor-email">Email</label>
-            <input id="doctor-email" type="email" value={regEmail} onChange={e => setRegEmail(e.target.value)} required style={{ width: '100%', margin: '0.5rem 0 1.2rem 0', padding: '0.6rem', borderRadius: 6, border: '1px solid #ccc', fontSize: '1rem' }} />
-            <label htmlFor="doctor-speciality">Speciality</label>
-            <select id="doctor-speciality" value={regSpeciality} onChange={e => setRegSpeciality(e.target.value)} required style={{ width: '100%', margin: '0.5rem 0 1.2rem 0', padding: '0.6rem', borderRadius: 6, border: '1px solid #ccc', fontSize: '1rem' }}>
-              <option value="" disabled>Select Speciality</option>
-              <option value="Cardiology">Cardiology</option>
-              <option value="Dermatology">Dermatology</option>
-              <option value="Orthopedics">Orthopedics</option>
-              <option value="Neurology">Neurology</option>
-              <option value="Oncology">Oncology</option>
-              <option value="Psychiatry">Psychiatry</option>
-              <option value="Radiology">Radiology</option>
-              <option value="Pathology">Pathology</option>
-              <option value="Gastroenterology">Gastroenterology</option>
-            </select>
-            <label htmlFor="doctor-contact">Mobile Number</label>
-            <input id="doctor-contact" type="tel" pattern="[0-9]{10,15}" value={regContact} onChange={e => setRegContact(e.target.value)} required style={{ width: '100%', margin: '0.5rem 0 1.2rem 0', padding: '0.6rem', borderRadius: 6, border: '1px solid #ccc', fontSize: '1rem' }} />
-            <button type="submit" className="logout-btn" style={{ width: '100%', marginBottom: 10 }} disabled={regLoading}>{regLoading ? 'Registering...' : 'Register'}</button>
-            {regError && <div style={{ color: 'red', marginTop: 8 }}>{regError}</div>}
-          </form>
-        </main>
+      <div className="h-screen flex items-center justify-center bg-gray-50 text-indigo-600">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
       </div>
     );
   }
 
-  // Main dashboard with sidebar links and routed content
+  if (!profile) {
+    return <DoctorRegistration onSuccess={handleRegistrationSuccess} />;
+  }
+
   return (
-    <div className="doctor-dashboard-layout">
-      <header className="doctor-dashboard-header enhanced-header">
-        <div className="header-left">
-          <span className="dashboard-logo">🩺</span>
-          <div>
-            <h2>Doctor Dashboard</h2>
-            <div className="dashboard-subtitle">Welcome, Dr. {profile?.name}</div>
-          </div>
-        </div>
-        <button className="logout-btn" onClick={handleLogout}>Logout</button>
-      </header>
-      <div className="doctor-dashboard-body">
-        <aside className="doctor-dashboard-sidebar enhanced-sidebar">
-          <nav>
-            <ul>
-              {TABS.map(tab => (
-                <li key={tab.key} className={location.pathname === tab.path ? 'active' : ''}>
-                  <Link
-                    to={tab.path}
-                    style={{
-                      color: location.pathname === tab.path ? '#4b3ca7' : '#3a3576',
-                      fontWeight: location.pathname === tab.path ? 'bold' : 'normal',
-                      fontSize: '1.08rem',
-                      width: '100%',
-                      textAlign: 'left',
-                      padding: '0.7rem 1.1rem 0.7rem 0.7rem',
-                      borderRadius: '0.5rem',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.7rem',
-                      textDecoration: 'none',
-                    }}
-                  >
-                    <span className="sidebar-icon">{tab.icon}</span> {tab.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </nav>
-        </aside>
-        <main className="doctor-dashboard-content enhanced-content">
-          {location.pathname === '/dashboard/doctor/profile' && profile && (
-            <div style={{maxWidth: 480, margin: '0 auto', background: '#fff', borderRadius: 10, boxShadow: '0 2px 8px #4b3ca71a', padding: '2rem 2.5rem'}}>
-              <h3 style={{marginBottom: 18, color: '#4b3ca7'}}>Your Profile</h3>
-              <ul style={{fontSize: '1.08rem', color: '#333', listStyle: 'none', padding: 0}}>
-                <li><b>Name:</b> {profile.name}</li>
-                <li><b>Email:</b> {profile.email}</li>
-                <li><b>Speciality:</b> {profile.speciality}</li>
-                <li><b>Contact:</b> {profile.contact}</li>
-                <li><b>Health ID:</b> <span style={{fontFamily: 'monospace', fontSize: '0.93rem'}}>{profile.health_id}</span></li>
-              </ul>
-            </div>
-          )}
-          {location.pathname !== '/dashboard/doctor/profile' && <Outlet />}
-        </main>
-      </div>
-      <Footer />
-    </div>
+    <DashboardLayout role="doctor" user={profile} onLogout={handleLogout}>
+      <Routes>
+        <Route path="/" element={<DoctorOverview profile={profile} />} />
+        <Route path="requests" element={<DoctorRequests profile={profile} />} />
+        <Route path="lookup" element={<DoctorPatientLookup />} />
+        <Route path="profile" element={<div className="card"><h3>Profile</h3><pre>{JSON.stringify(profile, null, 2)}</pre></div>} />
+      </Routes>
+    </DashboardLayout>
   );
 };
 
-export default DoctorDashboard; 
+export default DoctorDashboard;

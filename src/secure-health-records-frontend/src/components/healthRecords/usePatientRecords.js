@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { getBackendActor } from '../../dfinity';
 import { Principal } from '@dfinity/principal';
-import { AuthClient } from '@dfinity/auth-client'; // NEW: import AuthClient
+import { AuthClient } from '@dfinity/auth-client';
 
-export function usePatientRecords() {
+export function usePatientRecords(targetPrincipal) {
   const [records, setRecords] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -13,7 +13,6 @@ export function usePatientRecords() {
     const authClient = await AuthClient.create();
     const identity = authClient.getIdentity();
     const principal = identity.getPrincipal().toText();
-    console.log('usePatientRecords principal:', principal);
     return principal;
   };
 
@@ -21,14 +20,21 @@ export function usePatientRecords() {
     setLoading(true);
     setError('');
     try {
-      const principalString = await getCurrentPrincipal(); // Use AuthClient
-      console.log('Fetching records for principal:', principalString); // DEBUG
-      if (!principalString) throw new Error('User not logged in');
+      let principalString = targetPrincipal;
+      if (!principalString) {
+        principalString = await getCurrentPrincipal();
+      }
+
+      console.log('Fetching records for principal:', principalString);
+      if (!principalString) throw new Error('User not logged in or identified');
+
       const principal = Principal.fromText(principalString);
       const actor = await getBackendActor();
       if (!actor) throw new Error('Backend not initialized. Please try again.');
+
       const backendRecords = await actor.get_records(principal);
-      console.log('Records returned from backend:', backendRecords); // DEBUG
+      console.log('Records returned from backend:', backendRecords);
+
       // Map backend records to frontend format (metadata only)
       const processed = backendRecords.map(record => {
         const category = record.category ? Object.keys(record.category)[0] : '';
@@ -43,12 +49,13 @@ export function usePatientRecords() {
       });
       setRecords(processed);
     } catch (err) {
-      setError(err.message || 'Could not fetch records from backend.');
+      console.error(err);
+      setError('Could not fetch records. Access may be denied or system error.');
       setRecords([]);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [targetPrincipal]);
 
   useEffect(() => {
     fetchRecords();
@@ -77,9 +84,7 @@ export function usePatientRecords() {
       if (!actor) throw new Error('Backend not initialized. Please try again.');
       const result = await actor.delete_record(recordId);
       if ('err' in result) throw new Error(result.err);
-      // Trigger refetch
       fetchRecords();
-      // Optionally, dispatch a custom event for other listeners
       window.dispatchEvent(new Event('health-records-updated'));
       return true;
     } catch (err) {
@@ -105,4 +110,4 @@ export function usePatientRecords() {
   };
 
   return { records, loading, error, refetch: fetchRecords, fetchRecordData, deleteRecord, renameRecord };
-} 
+}

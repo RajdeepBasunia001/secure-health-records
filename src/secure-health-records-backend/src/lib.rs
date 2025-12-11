@@ -246,19 +246,60 @@ fn upload_record(name: String, file_type: String, category: Category, data: Vec<
 #[ic_cdk::query]
 fn get_records(owner: Principal) -> Vec<HealthRecordMetadata> {
     let caller = ic_cdk::caller();
-    let allowed = if caller == owner {
-        true
-    } else {
-        // Check for approved consent
-        CONSENT_REQUESTS.with(|reqs| {
-            reqs.borrow().iter().any(|req|
-                req.patient == owner &&
-                req.requester == caller &&
-                req.status == ConsentStatus::Approved
-            )
+    
+    if caller == owner {
+        return RECORDS.with(|r| {
+            r.borrow().iter().filter(|rec| rec.owner == owner).map(|rec| HealthRecordMetadata {
+                id: rec.id,
+                owner: rec.owner,
+                name: rec.name.clone(),
+                file_type: rec.file_type.clone(),
+                category: rec.category.clone(),
+                uploaded_at: rec.uploaded_at,
+                digital_signature: rec.digital_signature.clone(),
+            }).collect()
+        });
+    }
+
+    // Check for legacy global consent
+    let has_global_consent = CONSENT_REQUESTS.with(|reqs| {
+        reqs.borrow().iter().any(|req|
+            req.patient == owner &&
+            req.requester == caller &&
+            req.status == ConsentStatus::Approved
+        )
+    });
+
+    // Resolve caller's health_id if they are a doctor
+    let doctor_health_id = DOCTORS.with(|docs| {
+        docs.borrow().iter()
+            .find(|d| d.user_principal == caller)
+            .map(|d| d.health_id.clone())
+    });
+
+    // Collect allowed file IDs from new granular consent requests
+    let allowed_file_ids: Vec<u64> = if let Some(health_id) = doctor_health_id {
+        APPOINTMENT_REQUESTS.with(|reqs| {
+            reqs.borrow().iter()
+                .filter(|req| 
+                    req.patient == owner && 
+                    // Check if the request is directed to this doctor
+                    req.provider_health_id == health_id && 
+                    req.status == "approved" && 
+                    req.request_type == "consent"
+                )
+                .flat_map(|req| {
+                    req.shared_files.clone().unwrap_or_default()
+                })
+                .map(|f| f.file_id)
+                .collect()
         })
+    } else {
+        Vec::new()
     };
-    if allowed {
+
+    if has_global_consent {
+        // Return all records for the owner
         RECORDS.with(|r| {
             r.borrow().iter().filter(|rec| rec.owner == owner).map(|rec| HealthRecordMetadata {
                 id: rec.id,
@@ -267,8 +308,23 @@ fn get_records(owner: Principal) -> Vec<HealthRecordMetadata> {
                 file_type: rec.file_type.clone(),
                 category: rec.category.clone(),
                 uploaded_at: rec.uploaded_at,
-                digital_signature: rec.digital_signature.clone(), // Added mapping
+                digital_signature: rec.digital_signature.clone(),
             }).collect()
+        })
+    } else if !allowed_file_ids.is_empty() {
+        // Return only allowed records
+        RECORDS.with(|r| {
+            r.borrow().iter()
+                .filter(|rec| rec.owner == owner && allowed_file_ids.contains(&rec.id))
+                .map(|rec| HealthRecordMetadata {
+                    id: rec.id,
+                    owner: rec.owner,
+                    name: rec.name.clone(),
+                    file_type: rec.file_type.clone(),
+                    category: rec.category.clone(),
+                    uploaded_at: rec.uploaded_at,
+                    digital_signature: rec.digital_signature.clone(),
+                }).collect()
         })
     } else {
         vec![]
@@ -412,7 +468,7 @@ fn rename_record(record_id: u64, new_name: String) -> Result<(), String> {
 }
 
 #[ic_cdk::update]
-fn create_appointment_request(
+pub fn create_appointment_request(
     provider_health_id: String,
     request_type: String,
     details: String,
@@ -736,6 +792,70 @@ pub fn create_consent_request(
     };
     APPOINTMENT_REQUESTS.with(|reqs| reqs.borrow_mut().push(req));
     "ok".to_string()
+}
+
+// --- New Methods for Doctor/Patient Features ---
+
+#[ic_cdk::query]
+pub fn get_patient_appointments() -> Vec<AppointmentRequest> {
+    let caller = ic_cdk::caller();
+    APPOINTMENT_REQUESTS.with(|reqs| {
+        reqs.borrow()
+            .iter()
+            .filter(|r| r.patient == caller && r.request_type == "appointment")
+            .cloned()
+            .collect()
+    })
+}
+
+#[ic_cdk::update]
+pub fn add_patient_record(
+    patient_principal: Principal,
+    name: String,
+    file_type: String,
+    category: Category,
+    data: Vec<u8>
+) -> String {
+    let caller = ic_cdk::caller();
+    
+    // 1. Verify caller is a doctor
+    let is_doctor = DOCTORS.with(|docs| {
+        docs.borrow().iter().any(|d| d.user_principal == caller)
+    });
+    
+    if !is_doctor {
+        return "Unauthorized: Only doctors can add patient records".to_string();
+    }
+
+    // 2. Create the record
+    let now = time();
+    let id = NEXT_RECORD_ID.with(|n| {
+        let mut n = n.borrow_mut();
+        let id = *n;
+        *n += 1;
+        id
+    });
+
+    // Note: owner is set to patient_principal so they can see it.
+    // Ideally we would add 'created_by' to Struct, but for now we trust metadata or use description.
+    // Since we can't easily change struct without migration in dev, we'll keep it simple or append to name.
+    
+    // Let's stick to existing struct to avoid migration issues for now.
+    // The patient will see it in their list.
+    let record = HealthRecord {
+        id,
+        owner: patient_principal,
+        name: format!("{} (Prov. Upload)", name), // Tag it so patient knows
+        file_type,
+        category,
+        data,
+        digital_signature: "doctor-verified".to_string(), // Placeholder sig
+        uploaded_at: now,
+    };
+    
+    RECORDS.with(|r| r.borrow_mut().push(record));
+    
+    format!("ok:{}", id)
 }
 
 // Export Candid

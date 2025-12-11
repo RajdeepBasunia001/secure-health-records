@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { ShieldCheck, FolderLock, ArrowRightCircle } from 'lucide-react';
 import PaperCard from './PaperCard';
@@ -6,11 +7,11 @@ import './InsightSection.css';
 const InsightSection = () => {
   const features = [
     {
-        icon: <ShieldCheck className="icon mb-2" />,
-        title: 'Secure by Design',
-        desc: 'Every record is stored with integrity in mind. No duplication, no tampering — just clarity and confidence.',
-        label: 'Data Layer v1.0',
-        rotation: 1,
+      icon: <ShieldCheck className="icon mb-2" />,
+      title: 'Secure by Design',
+      desc: 'Every record is stored with integrity in mind. No duplication, no tampering — just clarity and confidence.',
+      label: 'Data Layer v1.0',
+      rotation: 1,
     },
     {
       icon: <FolderLock className="icon mb-2" />,
